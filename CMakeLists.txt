@@ -7,7 +7,7 @@ file (GLOB_RECURSE HELPER_SRC src/Helper/*.cpp)
 
 # Test Win Window
 add_executable(helper_test_win_window
-        ${HELPER_SRC} tester/test_win_window.cpp)
+        ${HELPER_SRC} test/test_win_window.cpp)
 
 target_include_directories(helper_test_win_window
         PRIVATE
