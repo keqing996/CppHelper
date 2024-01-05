@@ -32,9 +32,9 @@ namespace Helper::Win::Window
 
     void* GetDefaultWinMsgProc();
 
-    void* CreateDeviceContext(void* hWnd);
+    void* GetDeviceContext(void* hWnd);
 
-    void DestroyDeviceContext(void* hWnd, void* hDeviceContext);
+    void ReleaseDeviceContext(void* hWnd, void* hDeviceContext);
 
     void DeviceContextSwapBuffer(void* hDeviceContext);
 

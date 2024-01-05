@@ -123,12 +123,12 @@ namespace Helper::Win::Window
         return reinterpret_cast<void*>(&DefaultWindowProc);
     }
 
-    void* CreateDeviceContext(void* hWnd)
+    void* GetDeviceContext(void* hWnd)
     {
         return ::GetDC(static_cast<HWND>(hWnd));
     }
 
-    void DestroyDeviceContext(void* hWnd, void* hDeviceContext)
+    void ReleaseDeviceContext(void* hWnd, void* hDeviceContext)
     {
         ::ReleaseDC(static_cast<HWND>(hWnd), static_cast<HDC>(hDeviceContext));
     }
