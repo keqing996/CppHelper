@@ -16,6 +16,12 @@ namespace Helper::Win::Window
         }
     }
 
+    void Register(const std::wstring& windowRegisterName)
+    {
+        RegisterInfo info { nullptr, nullptr, nullptr, GetDefaultWinMsgProc() };
+        Register(windowRegisterName, info);
+    }
+
     void Register(const std::wstring& windowRegisterName, RegisterInfo info)
     {
         const WNDCLASSEXW wc = {
@@ -34,6 +40,12 @@ namespace Helper::Win::Window
         };
 
         ::RegisterClassExW(&wc);
+    }
+
+    void* Show(const std::wstring& windowRegisterName, const std::wstring& windowTitleName, int width, int height)
+    {
+        StyleInfo menuStyle { true, true, true, true };
+        return Show(windowRegisterName, windowTitleName, width, height, menuStyle);
     }
 
     void* Show(const std::wstring& windowRegisterName, const std::wstring& windowTitleName, int width, int height, StyleInfo menuStyle, void* windowCreateData)

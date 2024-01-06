@@ -20,7 +20,11 @@ namespace Helper::Win::Window
         bool canResize;
     };
 
+    void Register(const std::wstring& windowRegisterName);
+
     void Register(const std::wstring& windowRegisterName, RegisterInfo info);
+
+    void* Show(const std::wstring& windowRegisterName, const std::wstring& windowTitleName, int width, int height);
 
     void* Show(const std::wstring& windowRegisterName, const std::wstring& windowTitleName, int width, int height, StyleInfo menuStyle, void* windowCreateData = nullptr);
 
