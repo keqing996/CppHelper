@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <filesystem>
+#include <sstream>
 
 namespace Helper::File
 {
@@ -23,5 +24,20 @@ namespace Helper::File
         fileStream.close();
 
         return content;
+    }
+
+    std::string LoadText(const std::string& filePath)
+    {
+        if (!std::filesystem::exists(filePath))
+            return {};
+
+        std::ifstream fileStream(filePath, std::ios::binary);
+        if (!fileStream.is_open())
+            return {};
+
+        std::ostringstream stringStream;
+        stringStream << fileStream.rdbuf();
+
+        return stringStream.str();
     }
 }
