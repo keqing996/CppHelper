@@ -64,7 +64,7 @@ namespace Helper::Win::Window
         }
 
         if (menuStyle.canResize)
-            windowStyle = WS_THICKFRAME;
+            windowStyle |= WS_THICKFRAME;
 
         HWND hWnd = ::CreateWindowW(
                         windowRegisterName.c_str(),
