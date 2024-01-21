@@ -6,14 +6,14 @@
 
 namespace Helper::File
 {
-    std::vector<char> LoadBinary(const std::string& filePath)
+    std::optional<std::vector<char>> LoadBinary(const std::string& filePath)
     {
         if (!std::filesystem::exists(filePath))
-            return {};
+            return std::nullopt;
 
         std::ifstream fileStream(filePath, std::ios::binary);
         if (!fileStream.is_open())
-            return {};
+            return std::nullopt;
 
         fileStream.seekg(0, std::ios::end);
         unsigned int size = fileStream.tellg();
@@ -26,14 +26,14 @@ namespace Helper::File
         return content;
     }
 
-    std::string LoadText(const std::string& filePath)
+    std::optional<std::string> LoadText(const std::string& filePath)
     {
         if (!std::filesystem::exists(filePath))
-            return {};
+            return std::nullopt;
 
         std::ifstream fileStream(filePath, std::ios::binary);
         if (!fileStream.is_open())
-            return {};
+            return std::nullopt;
 
         std::ostringstream stringStream;
         stringStream << fileStream.rdbuf();
