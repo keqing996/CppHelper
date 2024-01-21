@@ -40,4 +40,6 @@ namespace Helper::Win::Window
 
     void ReleaseDeviceContext(void* hWnd, void* hDeviceContext);
 
+    void DeviceContextSwapBuffer(void* hDeviceContext);
+
 }
