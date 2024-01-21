@@ -40,18 +40,4 @@ namespace Helper::Win::Window
 
     void ReleaseDeviceContext(void* hWnd, void* hDeviceContext);
 
-    void DeviceContextSwapBuffer(void* hDeviceContext);
-
-    namespace OpenGL
-    {
-        bool PrepareWindowPixelFormat(void* hWnd);
-
-        void* CreateRenderContext(void* hDeviceContext);
-
-        bool BindRenderContext(void* hDeviceContext, void* hRenderContext);
-
-        void DestroyRenderContext(void* hRenderContext);
-
-    }
-
 }
