@@ -1,17 +1,28 @@
-
-#include "WindowsPlatform.h"
 #include "WinApiSystem.h"
-
+#include "WindowsPlatform.h"
+#include <vector>
 #include <shellapi.h>
 
-namespace Helper::Win::System
+namespace Helper::Win::System::Impl
 {
-    std::wstring GetWindowsUserName()
+    std::wstring _Windows_GetUserName()
     {
         wchar_t userNameBuffer[255];
         DWORD userNameBufferLen;
         ::GetUserName(userNameBuffer, &userNameBufferLen);
         return { userNameBuffer };
+    }
+
+    std::optional<std::wstring> _Windows_GetEnvVariable(const std::wstring& key)
+    {
+        DWORD bufferSize = GetEnvironmentVariable(key.c_str(), nullptr, 0);
+        if (bufferSize <= 0)
+            return std::nullopt;
+
+        std::vector<wchar_t> result(bufferSize);
+        GetEnvironmentVariable(key.c_str(), result.data(), bufferSize);
+
+        return { result.data() };
     }
 
     bool CreateIndependentProcess(const std::wstring& cmdLine)
