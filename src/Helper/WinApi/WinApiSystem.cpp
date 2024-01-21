@@ -5,7 +5,7 @@
 
 namespace Helper::Win::System::Impl
 {
-    std::wstring _Windows_GetUserName()
+    std::wstring Windows_GetUserName()
     {
         wchar_t userNameBuffer[255];
         DWORD userNameBufferLen;
@@ -13,7 +13,7 @@ namespace Helper::Win::System::Impl
         return { userNameBuffer };
     }
 
-    std::optional<std::wstring> _Windows_GetEnvVariable(const std::wstring& key)
+    std::optional<std::wstring> Windows_GetEnvVariable(const std::wstring& key)
     {
         DWORD bufferSize = GetEnvironmentVariable(key.c_str(), nullptr, 0);
         if (bufferSize <= 0)
