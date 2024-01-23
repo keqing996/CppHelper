@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 /* Platform define */
 #ifdef _MSC_VER
 #   define PLATFORM_WINDOWS 1
@@ -38,14 +40,13 @@
 /* Posix support */
 #define PLATFORM_SUPPORT_POSIX (PLATFORM_LINUX || PLATFORM_ANDROID || PLATFORM_MAC || PLATFORM_IOS)
 
-/* Assert */
-#ifdef _DEBUG
-#   if PLATFORM_WINDOWS
-#       define ASSERT_CHECK(expr)
-#   else
-#       define ASSERT_CHECK(expr)
-#   endif
+/* Assert - use comma operator,
+ * need extra parentheses so the comma isn't treated as a delimiter between the arguments.
+ * example: assert(("A must be equal to B", a == b));
+ */
+#ifdef NDEBUG
+#   define ASSERT_MSG(expr, msg)
 #else
-#   define ASSERT_CHECK(expr) (void(0))
+#   define ASSERT_MSG(expr, msg) assert(((void)(msg), (expr));
 #endif
 
