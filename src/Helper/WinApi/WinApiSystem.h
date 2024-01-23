@@ -27,7 +27,10 @@ namespace Helper::Win::System
         return Impl::Windows_GetEnvVariable(key);
     }
 
-    bool CreateIndependentProcess(const std::wstring& cmdLine);
+    inline bool CreateProcess(const std::wstring& cmdLine)
+    {
+
+    }
 
     void DoShellExecute(const std::wstring& app, const std::wstring& appPath, const std::wstring& appPara);
 

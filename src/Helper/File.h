@@ -1,5 +1,6 @@
 #pragma once
 
+#include "PlatformDefine.h"
 #include <vector>
 #include <string>
 #include <optional>
