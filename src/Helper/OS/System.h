@@ -3,16 +3,28 @@
 #include <string>
 #include "../PlatformDefine.h"
 
-namespace Helper::OS::System
+namespace Helper::OS
 {
-    std::string GetMachineName();
+    struct ProcessHandle;
 
-    std::string GetCurrentUserName();
+    class System
+    {
+    public:
+        System() = delete;
 
-    std::string GetEnvVariable(const std::string& keyName);
+    public:
+        static std::string GetMachineName();
+        static std::string GetCurrentUserName();
 
-    void SetEnvVariable(const std::string& keyName, const std::string& value);
+    public:
+        static int32_t GetCurrentProcessId();
+        static ProcessHandle GetProcessHandle(int32_t processId);
+        static void ReleaseProcessHandle(ProcessHandle hProcess);
+        static std::string GetProcessName(ProcessHandle hProcess);
 
-    std::string GetHomeDirectory();
-
+    public:
+        static std::string GetEnviromentVariable(const std::string& keyName);
+        static void SetEnviromentVariable(const std::string& keyName, const std::string& value);
+        static std::string GetHomeDirectory();
+    };
 }

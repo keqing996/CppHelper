@@ -1,35 +1,72 @@
 #include "../System.h"
-#include <vector>
+
 #include "WindowsDefine.h"
 #include "../../String.h"
 
+#include <vector>
+#include <Psapi.h>
+
 #if PLATFORM_WINDOWS
 
-namespace Helper::OS::System
+#undef GetEnviromentVariable
+#undef SetEnviromentVariable
+
+namespace Helper::OS
 {
-    std::string GetMachineName()
+    struct ProcessHandle
+    {
+        HANDLE handle;
+    };
+
+    std::string System::GetMachineName()
     {
         DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
-        wchar_t nameBuffer[bufferSize];
+        wchar_t nameBuffer[bufferSize] = {};
         if (!::GetComputerNameW(nameBuffer, &bufferSize))
             return {};
 
         return String::WideStringToString(nameBuffer);
     }
 
-    std::string GetCurrentUserName()
+    std::string System::GetCurrentUserName()
     {
         DWORD bufferSize = 256 + 1;
-        wchar_t nameBuffer[bufferSize];
+        wchar_t nameBuffer[bufferSize] = {};
         if (!::GetUserNameW(nameBuffer, &bufferSize))
             return {};
 
         return String::WideStringToString(nameBuffer);
     }
 
-    std::string GetEnvVariable(const std::string& keyName)
+    int32_t System::GetCurrentProcessId()
     {
-        std::vector<wchar_t> buffer(1024);
+        return ::GetCurrentProcessId();
+    }
+
+    ProcessHandle System::GetProcessHandle(int32_t processId)
+    {
+        const HANDLE hProcess = ::OpenProcess(PROCESS_ALL_ACCESS, TRUE, processId);
+        return { hProcess };
+    }
+
+    void System::ReleaseProcessHandle(ProcessHandle hProcess)
+    {
+        ::CloseHandle(hProcess.handle);
+    }
+
+    std::string System::GetProcessName(ProcessHandle hProcess)
+    {
+        wchar_t nameBuffer[256 + 1] = {};
+        const DWORD length = ::GetProcessImageFileNameW(hProcess.handle, nameBuffer, 256);
+        if (length == 0)
+            return {};
+
+        return String::WideStringToString(nameBuffer);
+    }
+
+    std::string System::GetEnviromentVariable(const std::string& keyName)
+    {
+        std::vector<wchar_t> buffer(1024, 0);
         const std::wstring keyNameW = String::StringToWideString(keyName);
 
         DWORD ret = ::GetEnvironmentVariableW(keyNameW.c_str(), buffer.data(), 1024 - 1);
@@ -45,7 +82,7 @@ namespace Helper::OS::System
         return String::WideStringToString(buffer.data());
     }
 
-    void SetEnvVariable(const std::string& keyName, const std::string& value)
+    void System::SetEnviromentVariable(const std::string& keyName, const std::string& value)
     {
         const std::wstring keyNameW = String::StringToWideString(keyName);
 
@@ -60,12 +97,12 @@ namespace Helper::OS::System
         }
     }
 
-    std::string GetHomeDirectory()
+    std::string System::GetHomeDirectory()
     {
-        std::string result = GetEnvVariable("USERPROFILE");
+        std::string result = GetEnviromentVariable("USERPROFILE");
 
         if (result.empty())
-            result = GetEnvVariable("HOMEDRIVE") + GetEnvVariable("HOMEPATH");
+            result = GetEnviromentVariable("HOMEDRIVE") + GetEnviromentVariable("HOMEPATH");
 
         return result;
     }
