@@ -30,5 +30,7 @@ namespace Helper::OS
         static std::string GetHomeDirectory();
         static std::string GetCurrentDirectory();
         static bool SetCurrentDirectory(const std::string& path);
+        static std::string GetExecutableDirectory();
+        static std::string GetTempDirectory();
     };
 }

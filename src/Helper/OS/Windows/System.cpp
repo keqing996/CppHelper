@@ -123,6 +123,20 @@ namespace Helper::OS
         std::wstring pathW = String::StringToWideString(path);
         return ::SetCurrentDirectoryW(pathW.c_str());
     }
+
+    std::string System::GetExecutableDirectory()
+    {
+        wchar_t buffer[MAX_PATH + 1] = {};
+        ::GetModuleFileNameW(nullptr, buffer, MAX_PATH);
+        return String::WideStringToString(buffer);
+    }
+
+    std::string System::GetTempDirectory()
+    {
+        wchar_t buffer[MAX_PATH + 1] = {};
+        ::GetTempPathW(MAX_PATH, buffer);
+        return String::WideStringToString(buffer);
+    }
 }
 
 #endif
