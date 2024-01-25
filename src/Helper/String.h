@@ -92,12 +92,8 @@ namespace Helper::String
         return ret;
     }
 
-    inline std::wstring StringToWideString(const std::string& str)
+    inline std::wstring StringToWideString(const char* cstr)
     {
-        if (str.empty())
-            return {};
-
-        const char* cstr = str.c_str();
         size_t reqsize = 0;
 
         int convertResult = mbstowcs_s(&reqsize, nullptr, 0, cstr, _TRUNCATE);
@@ -115,12 +111,16 @@ namespace Helper::String
         return {buffer.begin(), buffer.end() - 1};
     }
 
-    inline std::string WideStringToString(const std::wstring& wStr)
+    inline std::wstring StringToWideString(const std::string& str)
     {
-        if (wStr.empty())
+        if (str.empty())
             return {};
 
-        const wchar_t* cstr = wStr.c_str();
+        return StringToWideString(str.c_str());
+    }
+
+    inline std::string WideStringToString(const wchar_t* cstr)
+    {
         size_t reqsize = 0;
 
         int convertResult = wcstombs_s(&reqsize, nullptr, 0, cstr, _TRUNCATE);
@@ -136,6 +136,14 @@ namespace Helper::String
             return {};
 
         return {buffer.begin(), buffer.end() - 1};
+    }
+
+    inline std::string WideStringToString(const std::wstring& wStr)
+    {
+        if (wStr.empty())
+            return {};
+
+        return WideStringToString(wStr.c_str());
     }
 
     template <typename Encoding, typename DelimType>
