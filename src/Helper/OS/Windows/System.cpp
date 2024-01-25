@@ -12,6 +12,7 @@
 #undef SetEnviromentVariable
 #undef GetCurrentDirectory
 #undef SetCurrentDirectory
+#undef CreateProcess
 
 namespace Helper::OS
 {
@@ -70,6 +71,154 @@ namespace Helper::OS
             return {};
 
         return String::WideStringToString(nameBuffer);
+    }
+
+    auto System::CreateProcessDettached(const std::string& commandLine) -> bool
+    {
+        STARTUPINFO si;
+        ::ZeroMemory( &si, sizeof(si) );
+        si.cb = sizeof(si);
+
+        PROCESS_INFORMATION pi;
+        ::ZeroMemory( &pi, sizeof(pi) );
+
+        std::wstring commandLineW = String::StringToWideString(commandLine);
+
+        // Start the child process.
+        if( !::CreateProcessW(
+                nullptr,                                    // No module name (use command line)
+                const_cast<LPWSTR>(commandLineW.c_str()),   // Command line
+                nullptr,                                    // Process handle not inheritable
+                nullptr,                                    // Thread handle not inheritable
+                FALSE,                                      // Set handle inheritance to FALSE
+                0,                                          // No creation flags
+                nullptr,                                    // Use parent's environment block
+                nullptr,                                    // Use parent's starting directory
+                &si,                                        // Pointer to STARTUPINFO structure
+                &pi )                                       // Pointer to PROCESS_INFORMATION structure
+                )
+        {
+            return false;
+        }
+
+        // Close process and thread handles.
+        ::CloseHandle( pi.hProcess );
+        ::CloseHandle( pi.hThread );
+
+        return true;
+    }
+
+    auto System::CreateProcess(const std::string& commandLine,
+        OnChildProcessStdOut pOnChildProcessStdOut,
+        GetChildProcessStdIn pGetChildProcessStdIn) -> std::pair<bool, int>
+    {
+        HANDLE hStdInPipeRead = nullptr;
+        HANDLE hStdInPipeWrite = nullptr;
+        HANDLE hStdOutPipeRead = nullptr;
+        HANDLE hStdOutPipeWrite = nullptr;
+
+        STARTUPINFO si;
+        ZeroMemory(&si, sizeof(STARTUPINFO));
+
+        PROCESS_INFORMATION pi;
+        ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
+
+        SECURITY_ATTRIBUTES sa;
+        ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
+
+        bool havePipe = pOnChildProcessStdOut != nullptr || pGetChildProcessStdIn != nullptr;
+        if (havePipe)
+        {
+            // Create one-way pipe for child process STDOUT
+            if (!::CreatePipe(&hStdOutPipeRead, &hStdOutPipeWrite, &sa, 0))
+                return { false, 0 };
+
+            // Ensure read handle to pipe for STDOUT is not inherited
+            if (!::SetHandleInformation(hStdOutPipeRead, HANDLE_FLAG_INHERIT, 0))
+                return { false, 0 };
+
+            // Create one-way pipe for child process STDIN
+            if (!::CreatePipe(&hStdInPipeRead, &hStdInPipeWrite, &sa, 0))
+                return { false, 0 };
+
+            // Ensure write handle to pipe for STDIN is not inherited
+            if (!::SetHandleInformation(hStdInPipeWrite, HANDLE_FLAG_INHERIT, 0))
+                return { false, 0 };
+        }
+
+        si.cb = sizeof(STARTUPINFO);
+        if (havePipe)
+        {
+            si.hStdError = hStdOutPipeWrite;
+            si.hStdOutput = hStdOutPipeWrite;
+            si.hStdInput = hStdInPipeRead;
+            si.dwFlags |= STARTF_USESTDHANDLES;
+            sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+            sa.lpSecurityDescriptor = nullptr;
+            // Pipe handles are inherited
+            sa.bInheritHandle = true;
+        }
+
+        std::wstring commandLineW = String::StringToWideString(commandLine);
+
+        // Start the child process.
+        if( !::CreateProcessW(
+                nullptr,                                    // No module name (use command line)
+                const_cast<LPWSTR>(commandLineW.c_str()),   // Command line
+                nullptr,                                    // Process handle not inheritable
+                nullptr,                                    // Thread handle not inheritable
+                FALSE,                                      // Set handle inheritance to FALSE
+                0,                                          // No creation flags
+                nullptr,                                    // Use parent's environment block
+                nullptr,                                    // Use parent's starting directory
+                &si,                                        // Pointer to STARTUPINFO structure
+                &pi )                                       // Pointer to PROCESS_INFORMATION structure
+                )
+        {
+            return { false, 0 };
+        }
+
+        if (havePipe)
+        {
+            // Before close child prcess's handles:
+            // ╔══════════════════╗                ╔══════════════════╗
+            // ║  Parent Process  ║                ║  Child Process   ║
+            // ╠══════════════════╣                ╠══════════════════╣
+            // ║                  ║                ║                  ║
+            // ║  hStdInPipeWrite ╟───────────────>║  hStdInPipeRead  ║
+            // ║                  ║                ║                  ║
+            // ║  hStdOutPipeRead ║<───────────────╢ hStdOutPipeWrite ║
+            // ║                  ║                ║                  ║
+            // ╚══════════════════╝                ╚══════════════════╝
+
+            ::CloseHandle(hStdInPipeRead);
+            ::CloseHandle(hStdOutPipeWrite);
+
+            // After close child process's handles:
+            // ╔══════════════════╗                ╔══════════════════╗
+            // ║  Parent Process  ║                ║  Child Process   ║
+            // ╠══════════════════╣                ╠══════════════════╣
+            // ║                  ║                ║                  ║
+            // ║  hStdInPipeWrite ╟───────────────>║                  ║
+            // ║                  ║                ║                  ║
+            // ║  hStdOutPipeRead ║<───────────────╢                  ║
+            // ║                  ║                ║                  ║
+            // ╚══════════════════╝                ╚══════════════════╝
+
+
+        }
+
+        // Wait until child process exits
+        ::WaitForSingleObject(pi.hProcess, INFINITE);
+
+        // Close process and thread handles
+        ::CloseHandle(pi.hProcess);
+        ::CloseHandle(pi.hThread);
+
+        DWORD dwExitCode = 0;
+        ::GetExitCodeProcess(pi.hProcess, &dwExitCode);
+
+        return { true, dwExitCode };
     }
 
     std::string System::GetEnviromentVariable(const std::string& keyName)
