@@ -20,6 +20,11 @@ namespace Helper::OS
         HANDLE handle;
     };
 
+    struct ThreadHandle
+    {
+        HANDLE handle;
+    };
+
     std::string System::GetMachineName()
     {
         DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
@@ -45,21 +50,22 @@ namespace Helper::OS
         return ::GetCurrentProcessId();
     }
 
-    ProcessHandle System::GetProcessHandle(int32_t processId)
+    std::shared_ptr<ProcessHandle> System::GetProcessHandle(int32_t processId)
     {
-        const HANDLE hProcess = ::OpenProcess(PROCESS_ALL_ACCESS, TRUE, processId);
-        return { hProcess };
+        auto pHandle = std::make_shared<ProcessHandle>();
+        pHandle->handle = ::OpenProcess(PROCESS_ALL_ACCESS, TRUE, processId);
+        return pHandle;
     }
 
-    void System::ReleaseProcessHandle(ProcessHandle hProcess)
+    void System::ReleaseProcessHandle(const std::shared_ptr<ProcessHandle>& hProcess)
     {
-        ::CloseHandle(hProcess.handle);
+        ::CloseHandle(hProcess->handle);
     }
 
-    std::string System::GetProcessName(ProcessHandle hProcess)
+    std::string System::GetProcessName(const std::shared_ptr<ProcessHandle>& hProcess)
     {
         wchar_t nameBuffer[256 + 1] = {};
-        const DWORD length = ::GetProcessImageFileNameW(hProcess.handle, nameBuffer, 256);
+        const DWORD length = ::GetProcessImageFileNameW(hProcess->handle, nameBuffer, 256);
         if (length == 0)
             return {};
 

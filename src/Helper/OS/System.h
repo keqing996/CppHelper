@@ -1,11 +1,13 @@
 #pragma once
 
 #include <string>
+#include <memory>
 #include "../PlatformDefine.h"
 
 namespace Helper::OS
 {
     struct ProcessHandle;
+    struct ThreadHandle;
 
     class System
     {
@@ -13,24 +15,24 @@ namespace Helper::OS
         System() = delete;
 
     public:
-        static std::string GetMachineName();
-        static std::string GetCurrentUserName();
+        static auto GetMachineName() -> std::string;
+        static auto GetCurrentUserName() -> std::string;
 
     public:
-        static int32_t GetCurrentProcessId();
-        static ProcessHandle GetProcessHandle(int32_t processId);
-        static void ReleaseProcessHandle(ProcessHandle hProcess);
-        static std::string GetProcessName(ProcessHandle hProcess);
+        static auto GetCurrentProcessId() -> int32_t;
+        static auto GetProcessHandle(int32_t processId) -> std::shared_ptr<ProcessHandle>;
+        static auto ReleaseProcessHandle(const std::shared_ptr<ProcessHandle>& hProcess) -> void;
+        static auto GetProcessName(const std::shared_ptr<ProcessHandle>& hProcess) -> std::string;
 
     public:
-        static std::string GetEnviromentVariable(const std::string& keyName);
-        static void SetEnviromentVariable(const std::string& keyName, const std::string& value);
+        static auto GetEnviromentVariable(const std::string& keyName) -> std::string;
+        static auto SetEnviromentVariable(const std::string& keyName, const std::string& value) -> void;
 
     public:
-        static std::string GetHomeDirectory();
-        static std::string GetCurrentDirectory();
-        static bool SetCurrentDirectory(const std::string& path);
-        static std::string GetExecutableDirectory();
-        static std::string GetTempDirectory();
+        static auto GetHomeDirectory() -> std::string;
+        static auto GetCurrentDirectory() -> std::string;
+        static auto SetCurrentDirectory(const std::string& path) -> bool;
+        static auto GetExecutableDirectory() -> std::string;
+        static auto GetTempDirectory() -> std::string;
     };
 }
