@@ -25,6 +25,10 @@ namespace Helper::OS
     public:
         static std::string GetEnviromentVariable(const std::string& keyName);
         static void SetEnviromentVariable(const std::string& keyName, const std::string& value);
+
+    public:
         static std::string GetHomeDirectory();
+        static std::string GetCurrentDirectory();
+        static bool SetCurrentDirectory(const std::string& path);
     };
 }

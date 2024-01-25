@@ -10,6 +10,8 @@
 
 #undef GetEnviromentVariable
 #undef SetEnviromentVariable
+#undef GetCurrentDirectory
+#undef SetCurrentDirectory
 
 namespace Helper::OS
 {
@@ -105,6 +107,21 @@ namespace Helper::OS
             result = GetEnviromentVariable("HOMEDRIVE") + GetEnviromentVariable("HOMEPATH");
 
         return result;
+    }
+
+    std::string System::GetCurrentDirectory()
+    {
+        std::wstring result;
+        const auto size = ::GetCurrentDirectoryW(0, nullptr);
+        result.resize(size);
+        ::GetCurrentDirectoryW(size, result.data());
+        return String::WideStringToString(result);
+    }
+
+    bool System::SetCurrentDirectory(const std::string& path)
+    {
+        std::wstring pathW = String::StringToWideString(path);
+        return ::SetCurrentDirectoryW(pathW.c_str());
     }
 }
 
