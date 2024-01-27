@@ -11,7 +11,6 @@ namespace Helper::OS
 {
     struct ProcessHandle;
     struct ThreadHandle;
-    struct PipeHanle;
 
     class System
     {
@@ -25,7 +24,7 @@ namespace Helper::OS
     public:
         using FChildProcessStdOutReceived = void (*) (const char*, int);
         using FChildProcessStdOutFinished = void (*) ();
-        using FGetChildProcessSendStdIn = void (*) (const std::function<bool(const char*, int)>&);
+        using FGetChildProcessSendStdIn = void (*) (const std::function<int(const char*, int)>&);
 
         struct ProcessCreateInfo
         {

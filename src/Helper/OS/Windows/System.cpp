@@ -204,42 +204,65 @@ namespace Helper::OS
         // ║                  ║                ║                  ║
         // ╚══════════════════╝                ╚══════════════════╝
 
-        // Set std in to outside
+        // Set stdin to outside
         if (processCreateInfo.pGetChildProcessSendStdIn != nullptr)
         {
-            std::function<bool(const char*, int)> fSendStdIn = [](const char* pData, int size) -> bool
+            std::function<bool(const char*, int)> fSendStdIn = [&hStdInPipeWrite](const char* pData, int size) -> int
             {
+                if (pData == nullptr)
+                    return -1;
 
+                DWORD realWrite = 0;
+                const bool success = ::WriteFile(hStdInPipeWrite, pData, size, &realWrite, nullptr);
+                if (!success)
+                    return -1;
+
+                return realWrite;
             };
 
             processCreateInfo.pGetChildProcessSendStdIn(fSendStdIn);
         }
 
-        if (pOnChildProcessStdOut != nullptr)
+        // Keep fetching stdout
+        if (processCreateInfo.pChildProcessStdOutReceived != nullptr
+            || processCreateInfo.pChildProcessStdOutFinished != nullptr)
         {
-            char* pBuffer = new char[1024];
+            const auto pBuffer = new char[1024];
+
             while (true)
             {
                 DWORD readBytes = 0;
-                bool state = ::ReadFile(hStdOutPipeRead, pBuffer, 1024, &readBytes, nullptr);
+                const bool state = ::ReadFile(hStdOutPipeRead, pBuffer, 1024, &readBytes, nullptr);
                 if (!state || readBytes == 0)
-                    break;
+                {
+                    if (processCreateInfo.pChildProcessStdOutFinished != nullptr)
+                        processCreateInfo.pChildProcessStdOutFinished();
 
-                pOnChildProcessStdOut(pBuffer, readBytes);
+                    break;
+                }
+
+                if (processCreateInfo.pChildProcessStdOutReceived != nullptr)
+                    processCreateInfo.pChildProcessStdOutReceived(pBuffer, readBytes);
             }
+
+            delete[] pBuffer;
         }
+
+        // Close left handle
+        ::CloseHandle(hStdInPipeWrite);
+        ::CloseHandle(hStdOutPipeRead);
 
         // Wait until child process exits
         ::WaitForSingleObject(pi.hProcess, INFINITE);
+
+        DWORD dwExitCode = 0;
+        ::GetExitCodeProcess(pi.hProcess, &dwExitCode);
 
         // Close process and thread handles
         ::CloseHandle(pi.hProcess);
         ::CloseHandle(pi.hThread);
 
-        DWORD dwExitCode = 0;
-        ::GetExitCodeProcess(pi.hProcess, &dwExitCode);
-
-        return { true, dwExitCode };
+        return dwExitCode;
     }
 
     std::string System::GetEnviromentVariable(const std::string& keyName)
