@@ -32,6 +32,9 @@ namespace Helper::OS
         static auto CreateProcess(const std::string& commandLine, OnChildProcessStdOut pOnChildProcessStdOut = nullptr,
             GetChildProcessStdIn pGetChildProcessStdIn = nullptr) -> std::pair<bool, int>;
 
+    private:
+
+
     public:
         static auto GetEnviromentVariable(const std::string& keyName) -> std::string;
         static auto SetEnviromentVariable(const std::string& keyName, const std::string& value) -> void;

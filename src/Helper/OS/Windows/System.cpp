@@ -205,7 +205,19 @@ namespace Helper::OS
             // ║                  ║                ║                  ║
             // ╚══════════════════╝                ╚══════════════════╝
 
+            if (pOnChildProcessStdOut != nullptr)
+            {
+                char* pBuffer = new char[1024];
+                while (true)
+                {
+                    DWORD readBytes = 0;
+                    bool state = ::ReadFile(hStdOutPipeRead, pBuffer, 1024, &readBytes, nullptr);
+                    if (!state || readBytes == 0)
+                        break;
 
+                    pOnChildProcessStdOut(pBuffer, readBytes);
+                }
+            }
         }
 
         // Wait until child process exits
