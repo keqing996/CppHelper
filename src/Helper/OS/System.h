@@ -3,12 +3,15 @@
 #include <string>
 #include <memory>
 #include <functional>
+#include <optional>
+
 #include "../PlatformDefine.h"
 
 namespace Helper::OS
 {
     struct ProcessHandle;
     struct ThreadHandle;
+    struct PipeHanle;
 
     class System
     {
@@ -20,17 +23,24 @@ namespace Helper::OS
         static auto GetCurrentUserName() -> std::string;
 
     public:
-        using OnChildProcessStdOut = void(*)(const char*, int);
-        using SetChildProcessStdIn = bool(*)(const char*, int);
-        using GetChildProcessStdIn = SetChildProcessStdIn(*)();
+        using FChildProcessStdOutReceived = void (*) (const char*, int);
+        using FChildProcessStdOutFinished = void (*) ();
+        using FGetChildProcessSendStdIn = void (*) (const std::function<bool(const char*, int)>&);
+
+        struct ProcessCreateInfo
+        {
+            std::string commandLine;
+            FChildProcessStdOutReceived pChildProcessStdOutReceived;
+            FChildProcessStdOutFinished pChildProcessStdOutFinished;
+            FGetChildProcessSendStdIn pGetChildProcessSendStdIn;
+        };
 
         static auto GetCurrentProcessId() -> int32_t;
         static auto GetProcessHandle(int32_t processId) -> std::shared_ptr<ProcessHandle>;
         static auto ReleaseProcessHandle(const std::shared_ptr<ProcessHandle>& hProcess) -> void;
         static auto GetProcessName(const std::shared_ptr<ProcessHandle>& hProcess) -> std::string;
-        static auto CreateProcessDettached(const std::string& commandLine) -> bool;
-        static auto CreateProcess(const std::string& commandLine, OnChildProcessStdOut pOnChildProcessStdOut = nullptr,
-            GetChildProcessStdIn pGetChildProcessStdIn = nullptr) -> std::pair<bool, int>;
+        static auto CreateProcess(const std::string& commandLine, bool detach = false) -> std::optional<int>;
+        static auto CreateProcess(const ProcessCreateInfo& processCreateInfo) -> std::optional<int>;;
 
     private:
 

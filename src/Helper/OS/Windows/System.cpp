@@ -73,7 +73,7 @@ namespace Helper::OS
         return String::WideStringToString(nameBuffer);
     }
 
-    auto System::CreateProcessDettached(const std::string& commandLine) -> bool
+    std::optional<int> CreateProcess(const std::string& commandLine, bool detach)
     {
         STARTUPINFO si;
         ::ZeroMemory( &si, sizeof(si) );
@@ -85,7 +85,7 @@ namespace Helper::OS
         std::wstring commandLineW = String::StringToWideString(commandLine);
 
         // Start the child process.
-        if( !::CreateProcessW(
+        if(!::CreateProcessW(
                 nullptr,                                    // No module name (use command line)
                 const_cast<LPWSTR>(commandLineW.c_str()),   // Command line
                 nullptr,                                    // Process handle not inheritable
@@ -98,19 +98,28 @@ namespace Helper::OS
                 &pi )                                       // Pointer to PROCESS_INFORMATION structure
                 )
         {
-            return false;
+            return std::nullopt;
         }
 
-        // Close process and thread handles.
-        ::CloseHandle( pi.hProcess );
-        ::CloseHandle( pi.hThread );
+        if (!detach)
+        {
+            ::WaitForSingleObject(pi.hProcess, INFINITE);
 
-        return true;
+            DWORD dwExitCode = 0;
+            ::GetExitCodeProcess(pi.hProcess, &dwExitCode);
+
+            ::CloseHandle(pi.hProcess);
+            ::CloseHandle(pi.hThread);
+        }
+        else
+        {
+            ::CloseHandle(pi.hProcess);
+            ::CloseHandle(pi.hThread);
+            return 0;
+        }
     }
 
-    auto System::CreateProcess(const std::string& commandLine,
-        OnChildProcessStdOut pOnChildProcessStdOut,
-        GetChildProcessStdIn pGetChildProcessStdIn) -> std::pair<bool, int>
+    std::optional<int> System::CreateProcess(const ProcessCreateInfo& processCreateInfo)
     {
         HANDLE hStdInPipeRead = nullptr;
         HANDLE hStdInPipeWrite = nullptr;
@@ -126,43 +135,35 @@ namespace Helper::OS
         SECURITY_ATTRIBUTES sa;
         ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
 
-        bool havePipe = pOnChildProcessStdOut != nullptr || pGetChildProcessStdIn != nullptr;
-        if (havePipe)
-        {
-            // Create one-way pipe for child process STDOUT
-            if (!::CreatePipe(&hStdOutPipeRead, &hStdOutPipeWrite, &sa, 0))
-                return { false, 0 };
+        // Create one-way pipe for child process STDOUT
+        if (!::CreatePipe(&hStdOutPipeRead, &hStdOutPipeWrite, &sa, 0))
+            return std::nullopt;
 
-            // Ensure read handle to pipe for STDOUT is not inherited
-            if (!::SetHandleInformation(hStdOutPipeRead, HANDLE_FLAG_INHERIT, 0))
-                return { false, 0 };
+        // Ensure read handle to pipe for STDOUT is not inherited
+        if (!::SetHandleInformation(hStdOutPipeRead, HANDLE_FLAG_INHERIT, 0))
+            return std::nullopt;
 
-            // Create one-way pipe for child process STDIN
-            if (!::CreatePipe(&hStdInPipeRead, &hStdInPipeWrite, &sa, 0))
-                return { false, 0 };
+        // Create one-way pipe for child process STDIN
+        if (!::CreatePipe(&hStdInPipeRead, &hStdInPipeWrite, &sa, 0))
+            return std::nullopt;
 
-            // Ensure write handle to pipe for STDIN is not inherited
-            if (!::SetHandleInformation(hStdInPipeWrite, HANDLE_FLAG_INHERIT, 0))
-                return { false, 0 };
-        }
+        // Ensure write handle to pipe for STDIN is not inherited
+        if (!::SetHandleInformation(hStdInPipeWrite, HANDLE_FLAG_INHERIT, 0))
+            return std::nullopt;
 
         si.cb = sizeof(STARTUPINFO);
-        if (havePipe)
-        {
-            si.hStdError = hStdOutPipeWrite;
-            si.hStdOutput = hStdOutPipeWrite;
-            si.hStdInput = hStdInPipeRead;
-            si.dwFlags |= STARTF_USESTDHANDLES;
-            sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-            sa.lpSecurityDescriptor = nullptr;
-            // Pipe handles are inherited
-            sa.bInheritHandle = true;
-        }
+        si.hStdError = hStdOutPipeWrite;
+        si.hStdOutput = hStdOutPipeWrite;
+        si.hStdInput = hStdInPipeRead;
+        si.dwFlags |= STARTF_USESTDHANDLES;
+        sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+        sa.lpSecurityDescriptor = nullptr;
+        sa.bInheritHandle = true;   // Pipe handles are inherited
 
-        std::wstring commandLineW = String::StringToWideString(commandLine);
+        std::wstring commandLineW = String::StringToWideString(processCreateInfo.commandLine);
 
         // Start the child process.
-        if( !::CreateProcessW(
+        if(!::CreateProcessW(
                 nullptr,                                    // No module name (use command line)
                 const_cast<LPWSTR>(commandLineW.c_str()),   // Command line
                 nullptr,                                    // Process handle not inheritable
@@ -175,48 +176,56 @@ namespace Helper::OS
                 &pi )                                       // Pointer to PROCESS_INFORMATION structure
                 )
         {
-            return { false, 0 };
+            return std::nullopt;
         }
 
-        if (havePipe)
+        // Before close child prcess's handles:
+        // ╔══════════════════╗                ╔══════════════════╗
+        // ║  Parent Process  ║                ║  Child Process   ║
+        // ╠══════════════════╣                ╠══════════════════╣
+        // ║                  ║                ║                  ║
+        // ║  hStdInPipeWrite ╟───────────────>║  hStdInPipeRead  ║
+        // ║                  ║                ║                  ║
+        // ║  hStdOutPipeRead ║<───────────────╢ hStdOutPipeWrite ║
+        // ║                  ║                ║                  ║
+        // ╚══════════════════╝                ╚══════════════════╝
+
+        ::CloseHandle(hStdInPipeRead);
+        ::CloseHandle(hStdOutPipeWrite);
+
+        // After close child process's handles:
+        // ╔══════════════════╗                ╔══════════════════╗
+        // ║  Parent Process  ║                ║  Child Process   ║
+        // ╠══════════════════╣                ╠══════════════════╣
+        // ║                  ║                ║                  ║
+        // ║  hStdInPipeWrite ╟───────────────>║                  ║
+        // ║                  ║                ║                  ║
+        // ║  hStdOutPipeRead ║<───────────────╢                  ║
+        // ║                  ║                ║                  ║
+        // ╚══════════════════╝                ╚══════════════════╝
+
+        // Set std in to outside
+        if (processCreateInfo.pGetChildProcessSendStdIn != nullptr)
         {
-            // Before close child prcess's handles:
-            // ╔══════════════════╗                ╔══════════════════╗
-            // ║  Parent Process  ║                ║  Child Process   ║
-            // ╠══════════════════╣                ╠══════════════════╣
-            // ║                  ║                ║                  ║
-            // ║  hStdInPipeWrite ╟───────────────>║  hStdInPipeRead  ║
-            // ║                  ║                ║                  ║
-            // ║  hStdOutPipeRead ║<───────────────╢ hStdOutPipeWrite ║
-            // ║                  ║                ║                  ║
-            // ╚══════════════════╝                ╚══════════════════╝
-
-            ::CloseHandle(hStdInPipeRead);
-            ::CloseHandle(hStdOutPipeWrite);
-
-            // After close child process's handles:
-            // ╔══════════════════╗                ╔══════════════════╗
-            // ║  Parent Process  ║                ║  Child Process   ║
-            // ╠══════════════════╣                ╠══════════════════╣
-            // ║                  ║                ║                  ║
-            // ║  hStdInPipeWrite ╟───────────────>║                  ║
-            // ║                  ║                ║                  ║
-            // ║  hStdOutPipeRead ║<───────────────╢                  ║
-            // ║                  ║                ║                  ║
-            // ╚══════════════════╝                ╚══════════════════╝
-
-            if (pOnChildProcessStdOut != nullptr)
+            std::function<bool(const char*, int)> fSendStdIn = [](const char* pData, int size) -> bool
             {
-                char* pBuffer = new char[1024];
-                while (true)
-                {
-                    DWORD readBytes = 0;
-                    bool state = ::ReadFile(hStdOutPipeRead, pBuffer, 1024, &readBytes, nullptr);
-                    if (!state || readBytes == 0)
-                        break;
 
-                    pOnChildProcessStdOut(pBuffer, readBytes);
-                }
+            };
+
+            processCreateInfo.pGetChildProcessSendStdIn(fSendStdIn);
+        }
+
+        if (pOnChildProcessStdOut != nullptr)
+        {
+            char* pBuffer = new char[1024];
+            while (true)
+            {
+                DWORD readBytes = 0;
+                bool state = ::ReadFile(hStdOutPipeRead, pBuffer, 1024, &readBytes, nullptr);
+                if (!state || readBytes == 0)
+                    break;
+
+                pOnChildProcessStdOut(pBuffer, readBytes);
             }
         }
 
