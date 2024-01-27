@@ -41,9 +41,6 @@ namespace Helper::OS
         static auto CreateProcess(const std::string& commandLine, bool detach = false) -> std::optional<int>;
         static auto CreateProcess(const ProcessCreateInfo& processCreateInfo) -> std::optional<int>;;
 
-    private:
-
-
     public:
         static auto GetEnviromentVariable(const std::string& keyName) -> std::string;
         static auto SetEnviromentVariable(const std::string& keyName, const std::string& value) -> void;
