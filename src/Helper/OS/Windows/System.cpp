@@ -1,12 +1,11 @@
 #include "../System.h"
-
 #include "WindowsDefine.h"
-#include "../../String.h"
-
-#include <vector>
-#include <Psapi.h>
 
 #if PLATFORM_WINDOWS
+
+#include "../../String.h"
+#include <vector>
+#include <Psapi.h>
 
 #undef GetEnviromentVariable
 #undef SetEnviromentVariable
@@ -110,6 +109,7 @@ namespace Helper::OS
 
             ::CloseHandle(pi.hProcess);
             ::CloseHandle(pi.hThread);
+            return 0;
         }
         else
         {

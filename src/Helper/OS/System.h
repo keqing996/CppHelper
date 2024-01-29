@@ -39,7 +39,7 @@ namespace Helper::OS
         static auto ReleaseProcessHandle(const std::shared_ptr<ProcessHandle>& hProcess) -> void;
         static auto GetProcessName(const std::shared_ptr<ProcessHandle>& hProcess) -> std::string;
         static auto CreateProcess(const std::string& commandLine, bool detach = false) -> std::optional<int>;
-        static auto CreateProcess(const ProcessCreateInfo& processCreateInfo) -> std::optional<int>;;
+        static auto CreateProcess(const ProcessCreateInfo& processCreateInfo) -> std::optional<int>;
 
     public:
         static auto GetEnviromentVariable(const std::string& keyName) -> std::string;
