@@ -1,8 +1,8 @@
+#include "../Console.h"
 #include "WindowsDefine.h"
 
 #if PLATFORM_WINDOWS
 
-#include "../Console.h"
 #include <iostream>
 
 namespace Helper::OS
