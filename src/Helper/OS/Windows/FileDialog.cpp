@@ -3,7 +3,6 @@
 
 #if PLATFORM_WINDOWS
 
-#include <memory>
 #include <shobjidl.h>
 #include "../../String.h"
 #include "../../ScopeGuard.h"
@@ -26,176 +25,149 @@ namespace Helper::OS
 
     std::optional<std::string> ShowShellDialogAndGetResult(IFileDialog* pFileDialog)
     {
-        std::wstring result;
-        bool getResultSuccess = false;
+        if (FAILED(pFileDialog->Show(nullptr)))
+            return std::nullopt;
 
-        // show
-        HRESULT hr = pFileDialog->Show(nullptr);
-        if (SUCCEEDED(hr))
+        IShellItem* pShellItem;
+        if (FAILED(pFileDialog->GetResult(&pShellItem)))
+            return std::nullopt;
+
+        ScopeGuard guardShellItem = [&]{ pShellItem->Release(); };
         {
-            IShellItem* pShellItem;
-            hr = pFileDialog->GetResult(&pShellItem);
-            if (SUCCEEDED(hr))
-            {
-                ScopeGuard guardShellItem = [&]{ pShellItem->Release(); };
-                {
-                    PWSTR filePath;
-                    hr = pShellItem->GetDisplayName(SIGDN_FILESYSPATH, &filePath);
+            PWSTR filePath;
+            if (FAILED(pShellItem->GetDisplayName(SIGDN_FILESYSPATH, &filePath)))
+                return std::nullopt;
 
-                    if (SUCCEEDED(hr))
-                    {
-                        result = filePath;
-                        getResultSuccess = true;
-                        CoTaskMemFree(filePath);
-                    }
-                }
+            ScopeGuard guardFilePath = [&] { CoTaskMemFree(filePath); };
+            {
+                return String::WideStringToString(filePath);
             }
         }
-
-        if (getResultSuccess)
-            return String::WideStringToString(result);
-
-        return std::nullopt;
     }
 
     std::optional<std::string> FileDialog::OpenFile(const std::string& titleMsg, const std::vector<FileTypeFilter>* pFilter)
     {
-        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-        if (!SUCCEEDED(hr))
+        if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE)))
             return std::nullopt;
 
-        IFileDialog* pFileDialogRaw;
-        hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_ALL,
-                              IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileDialogRaw));
-
-        if (!SUCCEEDED(hr))
-            return std::nullopt;
-
-        auto FileDialogDeleter = [](IFileDialog* p)
+        ScopeGuard guardInit = [] { CoUninitialize(); };
         {
-            p->Release();
-        };
-
-        std::unique_ptr<IFileDialog, decltype(FileDialogDeleter)> pFileDialog(pFileDialogRaw, FileDialogDeleter);
-
-        // title
-        const auto titleMsgW = String::StringToWideString(titleMsg);
-        hr = pFileDialog->SetTitle(titleMsgW.c_str());
-        if (!SUCCEEDED(hr))
-            return std::nullopt;
-
-        // filter
-        if (pFilter != nullptr)
-        {
-            std::vector<FileTypeFilterW> filterVec;
-            for (const auto& filter : *pFilter)
-                filterVec.push_back(GetWideStringVersion(filter));
-
-            std::vector<COMDLG_FILTERSPEC> filterSpecVec;
-            for (const auto& [filterName, filterSuffic] : filterVec)
-            {
-                COMDLG_FILTERSPEC spec;
-                spec.pszName = filterName.c_str();
-                spec.pszSpec = filterSuffic.c_str();
-                filterSpecVec.push_back(spec);
-            }
-
-            hr = pFileDialog->SetFileTypes(pFilter->size() * sizeof(COMDLG_FILTERSPEC), filterSpecVec.data());
-            if (!SUCCEEDED(hr))
+            IFileDialog* pFileDialog;
+            if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileDialog))))
                 return std::nullopt;
+
+            ScopeGuard guardFileDialogRaw = [&] { pFileDialog->Release(); };
+            {
+                // title
+                const auto titleMsgW = String::StringToWideString(titleMsg);
+                if (FAILED(pFileDialog->SetTitle(titleMsgW.c_str())))
+                    return std::nullopt;
+
+                // filter
+                if (pFilter != nullptr)
+                {
+                    std::vector<FileTypeFilterW> filterVec;
+                    for (const auto& filter : *pFilter)
+                        filterVec.push_back(GetWideStringVersion(filter));
+
+                    std::vector<COMDLG_FILTERSPEC> filterSpecVec;
+                    for (const auto& [filterName, filterSuffic] : filterVec)
+                    {
+                        COMDLG_FILTERSPEC spec;
+                        spec.pszName = filterName.c_str();
+                        spec.pszSpec = filterSuffic.c_str();
+                        filterSpecVec.push_back(spec);
+                    }
+
+                    if (FAILED(pFileDialog->SetFileTypes(filterSpecVec.size() * sizeof(COMDLG_FILTERSPEC), filterSpecVec.data())))
+                        return std::nullopt;
+                }
+
+                // show
+                return ShowShellDialogAndGetResult(pFileDialog);
+            }
         }
-
-        // show
-        std::optional<std::string> result = ShowShellDialogAndGetResult(pFileDialog);
-
-        // clear up
-        CoUninitialize();
-
-        return result;
     }
 
     std::optional<std::string> FileDialog::SaveFile(const std::string& titleMsg, const std::string& defaultName, const std::vector<FileTypeFilter>* pFilter)
     {
-        IFileDialog* pFileDialog;
-        COMDLG_FILTERSPEC* pFileFilterArray = nullptr;
-
-        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-        if (!SUCCEEDED(hr))
+        if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE)))
             return std::nullopt;
 
-        hr = CoCreateInstance(CLSID_FileSaveDialog, nullptr, CLSCTX_ALL,
-                              IID_IFileSaveDialog, reinterpret_cast<void**>(&pFileDialog));
-
-        if (!SUCCEEDED(hr))
-            return std::nullopt;
-
-        // title
-        const auto titleMsgW = String::StringToWideString(titleMsg);
-        hr = pFileDialog->SetTitle(titleMsgW.c_str());
-        if (!SUCCEEDED(hr))
-            return std::nullopt;
-
-        // filter
-        if (pFilter != nullptr)
+        ScopeGuard guardInit = [] { CoUninitialize(); };
         {
-            pFileFilterArray = new COMDLG_FILTERSPEC[pFilter->size()];
-            for (int i = 0; i < pFilter->size(); i++)
+            IFileDialog* pFileDialog;
+            if (FAILED(CoCreateInstance(CLSID_FileSaveDialog, nullptr, CLSCTX_ALL, IID_IFileSaveDialog, reinterpret_cast<void**>(&pFileDialog))))
+                return std::nullopt;
+
+            ScopeGuard guardFileDialogRaw = [&] { pFileDialog->Release(); };
             {
-                pFileFilterArray[i].pszName = (*pFilter)[i].name.c_str();
-                pFileFilterArray[i].pszSpec = (*pFilter)[i].suffix.c_str();
+                // title
+                const auto titleMsgW = String::StringToWideString(titleMsg);
+                if (FAILED(pFileDialog->SetTitle(titleMsgW.c_str())))
+                    return std::nullopt;
+
+                // filter
+                if (pFilter != nullptr)
+                {
+                    std::vector<FileTypeFilterW> filterVec;
+                    for (const auto& filter : *pFilter)
+                        filterVec.push_back(GetWideStringVersion(filter));
+
+                    std::vector<COMDLG_FILTERSPEC> filterSpecVec;
+                    for (const auto& [filterName, filterSuffic] : filterVec)
+                    {
+                        COMDLG_FILTERSPEC spec;
+                        spec.pszName = filterName.c_str();
+                        spec.pszSpec = filterSuffic.c_str();
+                        filterSpecVec.push_back(spec);
+                    }
+
+                    if (FAILED(pFileDialog->SetFileTypes(filterSpecVec.size() * sizeof(COMDLG_FILTERSPEC), filterSpecVec.data())))
+                        return std::nullopt;
+                }
+
+                // save name
+                const auto defaultNameW = String::StringToWideString(defaultName);
+                if (FAILED(pFileDialog->SetFileName(defaultNameW.c_str())))
+                    return std::nullopt;
+
+                // show
+                return ShowShellDialogAndGetResult(pFileDialog);
             }
-            pFileDialog->SetFileTypes(pFilter->size() * sizeof(COMDLG_FILTERSPEC), pFileFilterArray);
         }
-
-        // save name
-        pFileDialog->SetFileName(String::StringToWideString(defaultName).c_str());
-
-        // show
-        std::optional<std::string> result = ShowShellDialogAndGetResult(pFileDialog);
-
-        // clear up
-        pFileDialog->Release();
-        CoUninitialize();
-
-        delete[] pFileFilterArray;
-
-        return result;
     }
 
     std::optional<std::string> FileDialog::OpenDirectory(const std::string& titleMsg)
     {
-        IFileDialog* pFileDialog;
-
-        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-        if (!SUCCEEDED(hr))
+        if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE)))
             return std::nullopt;
 
-        hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_ALL,
-                              IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileDialog));
+        ScopeGuard guardInit = [] { CoUninitialize(); };
+        {
+            IFileDialog* pFileDialog;
+            if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileDialog))))
+                return std::nullopt;
 
-        if (!SUCCEEDED(hr))
-            return std::nullopt;
+            ScopeGuard guardFileDialogRaw = [&] { pFileDialog->Release(); };
+            {
+                // title
+                const auto titleMsgW = String::StringToWideString(titleMsg);
+                if (FAILED(pFileDialog->SetTitle(titleMsgW.c_str())))
+                    return std::nullopt;
 
-        // set directory
-        DWORD options;
-        hr = pFileDialog->GetOptions(&options);
-        if (SUCCEEDED(hr))
-            pFileDialog->SetOptions(options | FOS_PICKFOLDERS);
+                // set directory
+                DWORD options;
+                if (FAILED(pFileDialog->GetOptions(&options)))
+                    return std::nullopt;
 
-        // title
-        const auto titleMsgW = String::StringToWideString(titleMsg);
-        hr = pFileDialog->SetTitle(titleMsgW.c_str());
-        if (!SUCCEEDED(hr))
-            return std::nullopt;
+                if (FAILED(pFileDialog->SetOptions(options | FOS_PICKFOLDERS)))
+                    return std::nullopt;
 
-        // show
-        std::optional<std::string> result = ShowShellDialogAndGetResult(pFileDialog);
-
-        // clear up
-        pFileDialog->Release();
-        CoUninitialize();
-
-        return result;
+                // show
+                return ShowShellDialogAndGetResult(pFileDialog);
+            }
+        }
     }
 
 }
