@@ -2,13 +2,13 @@
 
 #include "../../PlatformDefine.h"
 
+#if PLATFORM_WINDOWS
+
 #include <string>
 #include <memory>
 
 namespace Helper::OS
 {
-
-#if PLATFORM_WINDOWS
 
     struct WindowHandle;
     struct DeviceContextHandle;
@@ -52,6 +52,6 @@ namespace Helper::OS
         static auto DeviceContextSwapBuffer(const std::unique_ptr<DeviceContextHandle>& hDeviceContext) -> void;
     };
 
-#endif
-
 }
+
+#endif
