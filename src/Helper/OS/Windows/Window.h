@@ -4,6 +4,8 @@
 
 #if PLATFORM_WINDOWS
 
+#include "Resource.h"
+
 #include <string>
 #include <memory>
 
@@ -15,9 +17,9 @@ namespace Helper::OS
 
     struct RegisterInfo
     {
-        void* hIcon;
-        void* hIconSmall;
-        void* hCursor;
+        IconResource* pIcon;
+        IconResource* pIconSmall;
+        CursorResource* pCursor;
         void* pWinMsgProc;
     };
 

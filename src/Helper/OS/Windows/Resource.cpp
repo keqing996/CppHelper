@@ -7,27 +7,6 @@
 
 namespace Helper::OS
 {
-    struct DataResource
-    {
-        void* pData;
-        DWORD size;
-    };
-
-    struct CursorResource
-    {
-        HCURSOR hCursor;
-    };
-
-    struct BitmapResource
-    {
-        HBITMAP hBitmap;
-    };
-
-    struct IconResource
-    {
-        HICON hIcon;
-    };
-
     template<>
     std::unique_ptr<DataResource> Resource::LoadResource(int id)
     {

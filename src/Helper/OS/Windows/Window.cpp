@@ -47,12 +47,12 @@ namespace Helper::OS
             0L,
             0L,
             ::GetModuleHandle(nullptr),
-            static_cast<HICON>(info.hIcon),
-            static_cast<HICON>(info.hCursor),
+            (info.pIcon->hIcon),
+            (info.pCursor->hCursor),
             nullptr,
             nullptr,
             windowRegisterNameW.c_str(),
-            static_cast<HICON>(info.hIconSmall),
+            (info.pIconSmall->hIcon),
         };
 
         ::RegisterClassExW(&wc);

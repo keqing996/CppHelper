@@ -27,4 +27,38 @@
 
 #include <Windows.h>
 
+namespace Helper::OS
+{
+    struct ProcessHandle
+    {
+        HANDLE handle;
+    };
+
+    struct ThreadHandle
+    {
+        HANDLE handle;
+    };
+
+    struct DataResource
+    {
+        void* pData;
+        DWORD size;
+    };
+
+    struct CursorResource
+    {
+        HCURSOR hCursor;
+    };
+
+    struct BitmapResource
+    {
+        HBITMAP hBitmap;
+    };
+
+    struct IconResource
+    {
+        HICON hIcon;
+    };
+}
+
 #endif

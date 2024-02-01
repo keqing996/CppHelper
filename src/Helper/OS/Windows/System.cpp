@@ -15,16 +15,6 @@
 
 namespace Helper::OS
 {
-    struct ProcessHandle
-    {
-        HANDLE handle;
-    };
-
-    struct ThreadHandle
-    {
-        HANDLE handle;
-    };
-
     std::string System::GetMachineName()
     {
         DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
