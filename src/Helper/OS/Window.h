@@ -10,7 +10,8 @@ namespace Helper::OS
 
 #if PLATFORM_WINDOWS
 
-
+    struct WindowHandle;
+    struct DeviceContextHandle;
 
     struct RegisterInfo
     {
@@ -34,17 +35,21 @@ namespace Helper::OS
         Window() = delete;
 
     public:
-        static void Register(const std::wstring& windowRegisterName);
-        static void Register(const std::wstring& windowRegisterName, RegisterInfo info);
-        static void* Show(const std::wstring& windowRegisterName, const std::wstring& windowTitleName, int width, int height);
-        static void* Show(const std::wstring& windowRegisterName, const std::wstring& windowTitleName, int width, int height, StyleInfo menuStyle, void* windowCreateData = nullptr);
-        static void Destroy(void* hWnd);
-        static void UnRegister(const std::wstring& windowRegisterName);
-        static bool MessageLoop(bool blockWhenNoWindowsMessage = false);
-        static void* GetDefaultWinMsgProc();
-        static void* GetDeviceContext(void* hWnd);
-        static void ReleaseDeviceContext(void* hWnd, void* hDeviceContext);
-        static void DeviceContextSwapBuffer(void* hDeviceContext);
+        static auto Register(const std::string& windowRegisterName) -> void;
+        static auto Register(const std::string& windowRegisterName, RegisterInfo info) -> void;
+        static auto Show(const std::string& windowRegisterName, const std::string& windowTitleName, int width,
+                         int height) -> std::unique_ptr<WindowHandle>;
+        static auto Show(const std::string& windowRegisterName, const std::string& windowTitleName, int width,
+                         int height, StyleInfo menuStyle,
+                         void* windowCreateData = nullptr) -> std::unique_ptr<WindowHandle>;
+        static auto Destroy(const std::unique_ptr<WindowHandle>& pWindowHandle) -> void;
+        static auto UnRegister(const std::string& windowRegisterName) -> void;
+
+        static auto MessageLoop(bool blockWhenNoWindowsMessage = false) -> bool;
+        static auto GetDefaultWinMsgProc() -> void*;
+        static auto GetDeviceContext(const std::unique_ptr<WindowHandle>& pWindowHandle) -> std::unique_ptr<DeviceContextHandle>;
+        static auto ReleaseDeviceContext(const std::unique_ptr<WindowHandle>& hWnd, const std::unique_ptr<DeviceContextHandle>& hDeviceContext) -> void;
+        static auto DeviceContextSwapBuffer(const std::unique_ptr<DeviceContextHandle>& hDeviceContext) -> void;
     };
 
 #endif
