@@ -1,4 +1,5 @@
 #include "File.h"
+#include "ScopeGuard.h"
 
 #include <fstream>
 #include <filesystem>
@@ -15,15 +16,17 @@ namespace Helper::File
         if (!fileStream.is_open())
             return std::nullopt;
 
-        fileStream.seekg(0, std::ios::end);
-        unsigned int size = fileStream.tellg();
-        std::vector<char> content(size);
+        ScopeGuard fileStreamGuard = [&] { fileStream.close(); };
+        {
+            fileStream.seekg(0, std::ios::end);
+            unsigned int size = fileStream.tellg();
+            std::vector<char> content(size);
 
-        fileStream.seekg(0, std::ios::beg);
-        fileStream.read(content.data(), size);
-        fileStream.close();
+            fileStream.seekg(0, std::ios::beg);
+            fileStream.read(content.data(), size);
 
-        return content;
+            return content;
+        }
     }
 
     std::optional<std::string> LoadText(const std::string& filePath)
@@ -35,9 +38,12 @@ namespace Helper::File
         if (!fileStream.is_open())
             return std::nullopt;
 
-        std::ostringstream stringStream;
-        stringStream << fileStream.rdbuf();
+        ScopeGuard fileStreamGuard = [&] { fileStream.close(); };
+        {
+            std::ostringstream stringStream;
+            stringStream << fileStream.rdbuf();
 
-        return stringStream.str();
+            return stringStream.str();
+        }
     }
 }
