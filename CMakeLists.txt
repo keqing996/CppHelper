@@ -9,6 +9,10 @@ file (GLOB_RECURSE HELPER_SRC src/Helper/*.cpp)
 add_executable(helper_test_win_window
         ${HELPER_SRC} test/test_win_window.cpp)
 
+target_compile_definitions(helper_test_win_window PRIVATE
+        ENABLE_HELPER_EXT_OPENGL
+)
+
 target_include_directories(helper_test_win_window
         PRIVATE
         src/)

@@ -14,7 +14,7 @@ namespace Helper::OS
 
     struct DeviceContextHandle
     {
-        HDC hDC;
+        HDC hDeviceContext;
     };
 
     static LRESULT CALLBACK DefaultWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -159,19 +159,78 @@ namespace Helper::OS
     std::unique_ptr<DeviceContextHandle> Window::GetDeviceContext(const std::unique_ptr<WindowHandle>& pWindowHandle)
     {
         std::unique_ptr<DeviceContextHandle> result(new DeviceContextHandle());
-        result->hDC = ::GetDC(pWindowHandle->hWnd);
+        result->hDeviceContext = ::GetDC(pWindowHandle->hWnd);
         return result;
     }
 
     void Window::ReleaseDeviceContext(const std::unique_ptr<WindowHandle>& hWnd, const std::unique_ptr<DeviceContextHandle>& hDeviceContext)
     {
-        ::ReleaseDC(hWnd->hWnd, hDeviceContext->hDC);
+        ::ReleaseDC(hWnd->hWnd, hDeviceContext->hDeviceContext);
     }
 
     void Window::DeviceContextSwapBuffer(const std::unique_ptr<DeviceContextHandle>& hDeviceContext)
     {
-        ::SwapBuffers(hDeviceContext->hDC);
+        ::SwapBuffers(hDeviceContext->hDeviceContext);
     }
+
+#if ENABLE_HELPER_EXT_OPENGL
+
+    bool Window::PrepareWindowPixelFormat(const std::unique_ptr<WindowHandle>& hWnd)
+    {
+        const PIXELFORMATDESCRIPTOR pfd =
+        {
+            sizeof(PIXELFORMATDESCRIPTOR),
+            1,
+            PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    // Flags
+            PFD_TYPE_RGBA,        // The kind of framebuffer.
+            32,                   // Color depth of the framebuffer.
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            24,
+            8,
+            0
+        };
+
+        const HDC hdc = ::GetDC(hWnd->hWnd);
+        const unsigned int pixelFormat = ::ChoosePixelFormat(hdc, &pfd);
+
+        return ::SetPixelFormat(hdc, pixelFormat, &pfd);;
+    }
+
+    std::unique_ptr<OpenGLRenderContextHandle> Window::CreateRenderContext(const std::unique_ptr<DeviceContextHandle>& hDeviceContext)
+    {
+        std::unique_ptr<OpenGLRenderContextHandle> result(new OpenGLRenderContextHandle());
+        result->hOpenGLRenderContext = ::wglCreateContext(hDeviceContext->hDeviceContext);
+        return result;
+    }
+
+    bool Window::BindRenderContext(const std::unique_ptr<DeviceContextHandle>& hDeviceContext, const std::unique_ptr<OpenGLRenderContextHandle>& hRenderContext)
+    {
+        return ::wglMakeCurrent(hDeviceContext->hDeviceContext, hRenderContext->hOpenGLRenderContext);
+    }
+
+    void Window::DestroyRenderContext(const std::unique_ptr<OpenGLRenderContextHandle>& hRenderContext)
+    {
+        ::wglDeleteContext(hRenderContext->hOpenGLRenderContext);
+    }
+
+#endif
 }
 
 #endif

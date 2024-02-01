@@ -59,6 +59,13 @@ namespace Helper::OS
     {
         HICON hIcon;
     };
+
+#if ENABLE_HELPER_EXT_OPENGL
+    struct OpenGLRenderContextHandle
+    {
+        HGLRC hOpenGLRenderContext;
+    };
+#endif
 }
 
 #endif
