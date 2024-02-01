@@ -50,19 +50,19 @@ namespace Helper::OS
         return ::GetCurrentProcessId();
     }
 
-    std::shared_ptr<ProcessHandle> System::GetProcessHandle(int32_t processId)
+    std::unique_ptr<ProcessHandle> System::GetProcessHandle(int32_t processId)
     {
-        auto pHandle = std::make_shared<ProcessHandle>();
+        std::unique_ptr<ProcessHandle> pHandle(new ProcessHandle());
         pHandle->handle = ::OpenProcess(PROCESS_ALL_ACCESS, TRUE, processId);
         return pHandle;
     }
 
-    void System::ReleaseProcessHandle(const std::shared_ptr<ProcessHandle>& hProcess)
+    void System::ReleaseProcessHandle(const std::unique_ptr<ProcessHandle>& hProcess)
     {
         ::CloseHandle(hProcess->handle);
     }
 
-    std::string System::GetProcessName(const std::shared_ptr<ProcessHandle>& hProcess)
+    std::string System::GetProcessName(const std::unique_ptr<ProcessHandle>& hProcess)
     {
         wchar_t nameBuffer[256 + 1] = {};
         const DWORD length = ::GetProcessImageFileNameW(hProcess->handle, nameBuffer, 256);

@@ -35,9 +35,9 @@ namespace Helper::OS
         };
 
         static auto GetCurrentProcessId() -> int32_t;
-        static auto GetProcessHandle(int32_t processId) -> std::shared_ptr<ProcessHandle>;
-        static auto ReleaseProcessHandle(const std::shared_ptr<ProcessHandle>& hProcess) -> void;
-        static auto GetProcessName(const std::shared_ptr<ProcessHandle>& hProcess) -> std::string;
+        static auto GetProcessHandle(int32_t processId) -> std::unique_ptr<ProcessHandle>;
+        static auto ReleaseProcessHandle(const std::unique_ptr<ProcessHandle>& hProcess) -> void;
+        static auto GetProcessName(const std::unique_ptr<ProcessHandle>& hProcess) -> std::string;
         static auto CreateProcess(const std::string& commandLine, bool detach = false) -> std::optional<int>;
         static auto CreateProcess(const ProcessCreateInfo& processCreateInfo) -> std::optional<int>;
 
