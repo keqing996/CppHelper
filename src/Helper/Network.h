@@ -25,14 +25,16 @@ namespace Helper
         static int constexpr ADDR_SIZE = 16;
 
     public:
-        NetEndPointV6(const uint8_t* array, uint16_t port);
+        NetEndPointV6(const uint8_t* array, uint16_t port, uint32_t scopeId);
 
     public:
         auto GetIp() const -> const std::array<uint8_t, ADDR_SIZE>&;
         auto GetPort() const -> uint16_t;
+        auto GetScopeId() const -> uint32_t;
 
     private:
         std::array<uint8_t, ADDR_SIZE> _ip {};
         uint16_t _port;
+        uint32_t _scopeId;
     };
 }
