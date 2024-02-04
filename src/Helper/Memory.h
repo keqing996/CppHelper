@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Helper::OS
+namespace Helper
 {
     class Memory
     {

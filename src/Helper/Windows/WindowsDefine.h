@@ -27,7 +27,7 @@
 
 #include <Windows.h>
 
-namespace Helper::OS
+namespace Helper
 {
     struct ProcessHandle
     {

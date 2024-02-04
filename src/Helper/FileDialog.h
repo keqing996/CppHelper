@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../PlatformDefine.h"
+#include "PlatformDefine.h"
 #include <string>
 #include <optional>
 #include <vector>
 
-namespace Helper::OS
+namespace Helper
 {
     class FileDialog
     {

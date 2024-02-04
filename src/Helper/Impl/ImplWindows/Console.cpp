@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-namespace Helper::OS
+namespace Helper
 {
     void Console::CreateConsole()
     {

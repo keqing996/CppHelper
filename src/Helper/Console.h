@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../PlatformDefine.h"
+#include "PlatformDefine.h"
 
-namespace Helper::OS
+namespace Helper
 {
     class Console
     {

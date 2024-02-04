@@ -5,7 +5,7 @@
 
 #include "../../String.h"
 
-namespace Helper::OS
+namespace Helper
 {
     struct WindowHandle
     {

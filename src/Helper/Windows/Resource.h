@@ -6,7 +6,7 @@
 
 #include <memory>
 
-namespace Helper::OS
+namespace Helper
 {
     struct DataResource;
     struct CursorResource;

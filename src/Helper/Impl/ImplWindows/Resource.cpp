@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace Helper::OS
+namespace Helper
 {
     template<>
     std::unique_ptr<DataResource> Resource::LoadResource(int id)
