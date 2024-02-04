@@ -42,6 +42,25 @@ namespace Helper
         }
     }
 
+    static SOCKADDR_IN GetSocketAddrIpV4(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV4& endpoint)
+    {
+        SOCKADDR_IN serverAddr {};
+        serverAddr.sin_family = GetWsaAddressFamily(Socket::GetSocketAddressFamily(pSocket));
+        serverAddr.sin_port = ::htons(endpoint.GetPort());
+        serverAddr.sin_addr.S_un.S_addr = ::htonl(endpoint.GetIp());
+        return serverAddr;
+    }
+
+    static SOCKADDR_IN6 GetSocketAddrIpV6(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV6& endpoint)
+    {
+        SOCKADDR_IN6 serverAddr {};
+        serverAddr.sin6_family = GetWsaAddressFamily(Socket::GetSocketAddressFamily(pSocket));
+        ::memcpy(&serverAddr.sin6_addr, endpoint.GetIp().data(), NetEndPointV6::ADDR_SIZE);
+        serverAddr.sin6_scope_id = endpoint.GetScopeId();
+        serverAddr.sin6_port = endpoint.GetPort();
+        return serverAddr;
+    }
+
     bool Socket::IsInitialized()
     {
         return _socketInit;
@@ -170,11 +189,7 @@ namespace Helper
         if (socketFamily != AddressFamily::IpV4)
             return State::AddressFamilyNotMatch;
 
-        SOCKADDR_IN serverAddr {};
-        serverAddr.sin_family = GetWsaAddressFamily(socketFamily);
-        serverAddr.sin_port = ::htons(endpoint.GetPort());
-        serverAddr.sin_addr.S_un.S_addr = ::htonl(endpoint.GetIp());
-
+        SOCKADDR_IN serverAddr = GetSocketAddrIpV4(pSocket, endpoint);
         return ConnectInternal(pSocket, reinterpret_cast<SOCKADDR*>(&serverAddr), sizeof(SOCKADDR_IN), timeOutInMs);
     }
 
@@ -187,13 +202,63 @@ namespace Helper
         if (socketFamily != AddressFamily::IpV6)
             return State::AddressFamilyNotMatch;
 
-        SOCKADDR_IN6 serverAddr {};
-        serverAddr.sin6_family = GetWsaAddressFamily(socketFamily);
-        ::memcpy(&serverAddr.sin6_addr, endpoint.GetIp().data(), NetEndPointV6::ADDR_SIZE);
-        serverAddr.sin6_scope_id = endpoint.GetScopeId();
-        serverAddr.sin6_port = endpoint.GetPort();
+        SOCKADDR_IN6 serverAddr = GetSocketAddrIpV6(pSocket, endpoint);
+        return ConnectInternal(pSocket, reinterpret_cast<SOCKADDR*>(&serverAddr), sizeof(SOCKADDR_IN6), timeOutInMs);
+    }
 
-        return ConnectInternal(pSocket, reinterpret_cast<SOCKADDR*>(&serverAddr), sizeof(SOCKADDR_IN), timeOutInMs);
+    auto Socket::Bind(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV4& endpoint) -> State
+    {
+        if (pSocket == nullptr)
+            return State::InvalidSocket;
+
+        const auto socketFamily = GetSocketAddressFamily(pSocket);
+        if (socketFamily != AddressFamily::IpV4)
+            return State::AddressFamilyNotMatch;
+
+        SOCKADDR_IN serverAddr = GetSocketAddrIpV4(pSocket, endpoint);
+        const auto bindResult = ::bind(pSocket->handle, reinterpret_cast<SOCKADDR*>(&serverAddr), sizeof(SOCKADDR_IN));
+        if (bindResult == SOCKET_ERROR)
+        {
+            pSocket->lastError = ::WSAGetLastError();
+            return State::SocketError;
+        }
+
+        return State::Success;
+    }
+
+    auto Socket::Bind(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV6& endpoint) -> State
+    {
+        if (pSocket == nullptr)
+            return State::InvalidSocket;
+
+        const auto socketFamily = GetSocketAddressFamily(pSocket);
+        if (socketFamily != AddressFamily::IpV6)
+            return State::AddressFamilyNotMatch;
+
+        SOCKADDR_IN6 serverAddr = GetSocketAddrIpV6(pSocket, endpoint);
+        const auto bindResult = ::bind(pSocket->handle, reinterpret_cast<SOCKADDR*>(&serverAddr), sizeof(SOCKADDR_IN6));
+        if (bindResult == SOCKET_ERROR)
+        {
+            pSocket->lastError = ::WSAGetLastError();
+            return State::SocketError;
+        }
+
+        return State::Success;
+    }
+
+    auto Socket::Listen(const std::unique_ptr<SocketHandle>& pSocket) -> State
+    {
+        if (pSocket == nullptr)
+            return State::InvalidSocket;
+
+        const auto result = ::listen(pSocket->handle, SOMAXCONN);
+        if (result == SOCKET_ERROR)
+        {
+            pSocket->lastError = ::WSAGetLastError();
+            return State::SocketError;
+        }
+
+        return State::Success;
     }
 }
 

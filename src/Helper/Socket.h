@@ -58,7 +58,9 @@ namespace Helper
         static auto Connect(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV6& endpoint, int timeOutInMs = -1) -> State;
 
         // Server
-
+        static auto Bind(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV4& endpoint) -> State;
+        static auto Bind(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV6& endpoint) -> State;
+        static auto Listen(const std::unique_ptr<SocketHandle>& pSocket) -> State;
 
     private:
         inline static bool _socketInit = false;
