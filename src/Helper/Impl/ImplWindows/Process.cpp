@@ -24,9 +24,12 @@ namespace Helper
         return pHandle;
     }
 
-    void Process::ReleaseProcessHandle(const std::unique_ptr<ProcessHandle>& hProcess)
+    void Process::ReleaseProcessHandle(std::unique_ptr<ProcessHandle>&& pProcess)
     {
-        ::CloseHandle(hProcess->handle);
+        if (pProcess == nullptr)
+            return;
+
+        ::CloseHandle(pProcess->handle);
     }
 
     std::string Process::GetProcessName(const std::unique_ptr<ProcessHandle>& hProcess)
