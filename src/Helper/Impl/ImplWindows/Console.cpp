@@ -1,5 +1,5 @@
-#include "../Console.h"
-#include "WindowsDefine.h"
+#include "../../Console.h"
+#include "../../Windows/WindowsDefine.h"
 
 #if PLATFORM_WINDOWS
 

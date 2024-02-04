@@ -1,5 +1,5 @@
-#include "Resource.h"
-#include "WindowsDefine.h"
+#include "../../Windows/Resource.h"
+#include "../../Windows/WindowsDefine.h"
 
 #if PLATFORM_WINDOWS
 

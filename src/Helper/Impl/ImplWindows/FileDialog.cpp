@@ -1,5 +1,5 @@
-#include "../FileDialog.h"
-#include "WindowsDefine.h"
+#include "../../FileDialog.h"
+#include "../../Windows/WindowsDefine.h"
 
 #if PLATFORM_WINDOWS
 

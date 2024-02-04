@@ -1,6 +1,6 @@
-#include "../Memory.h"
-#include "../PlatformDefine.h"
-#include "WindowsDefine.h"
+#include "../../Memory.h"
+#include "../../PlatformDefine.h"
+#include "../../Windows/WindowsDefine.h"
 
 #if PLATFORM_WINDOWS
 
