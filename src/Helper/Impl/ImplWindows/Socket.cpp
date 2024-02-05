@@ -10,63 +10,76 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
-namespace Helper
+namespace Helper::Socket
 {
+
+    static bool gSocketEnvironmentInit = false;
+
     struct SocketHandle
     {
         SOCKET handle;
-        Socket::AddressFamily family;
-        Socket::Protocol protocol;
+        AddressFamily family;
+        Protocol protocol;
         int lastError;
     };
 
-    static int GetWsaAddressFamily(Socket::AddressFamily family)
+    static std::unique_ptr<SocketHandle> MakeSocketHandle(SOCKET handle, AddressFamily family, Protocol protocol)
+    {
+        std::unique_ptr<SocketHandle> result(new SocketHandle());
+        result->handle = handle;
+        result->family = family;
+        result->protocol = protocol;
+        result->lastError = 0;
+        return result;
+    }
+
+    static int GetWsaAddressFamily(AddressFamily family)
     {
         switch (family)
         {
-        case Socket::AddressFamily::IpV4:
+        case AddressFamily::IpV4:
             return AF_INET;
-        case Socket::AddressFamily::IpV6:
+        case AddressFamily::IpV6:
             return AF_INET6;
         }
     }
 
-    static std::pair<int, int> GetWsaProtocol(Socket::Protocol protocol)
+    static std::pair<int, int> GetWsaProtocol(Protocol protocol)
     {
         switch (protocol)
         {
-        case Socket::Protocol::Tcp:
+        case Protocol::Tcp:
             return std::make_pair(IPPROTO_TCP, SOCK_STREAM);
-        case Socket::Protocol::Udp:
+        case Protocol::Udp:
             return std::make_pair(IPPROTO_UDP, SOCK_DGRAM);
         }
     }
 
-    static SOCKADDR_IN GetSocketAddrIpV4(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV4& endpoint)
+    static SOCKADDR_IN GetSocketAddrIpV4(const std::unique_ptr<SocketHandle>& pSocket, const EndPointV4& endpoint)
     {
         SOCKADDR_IN serverAddr {};
-        serverAddr.sin_family = GetWsaAddressFamily(Socket::GetSocketAddressFamily(pSocket));
+        serverAddr.sin_family = GetWsaAddressFamily(GetSocketAddressFamily(pSocket));
         serverAddr.sin_port = ::htons(endpoint.GetPort());
         serverAddr.sin_addr.S_un.S_addr = ::htonl(endpoint.GetIp());
         return serverAddr;
     }
 
-    static SOCKADDR_IN6 GetSocketAddrIpV6(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV6& endpoint)
+    static SOCKADDR_IN6 GetSocketAddrIpV6(const std::unique_ptr<SocketHandle>& pSocket, const EndPointV6& endpoint)
     {
         SOCKADDR_IN6 serverAddr {};
-        serverAddr.sin6_family = GetWsaAddressFamily(Socket::GetSocketAddressFamily(pSocket));
-        ::memcpy(&serverAddr.sin6_addr, endpoint.GetIp().data(), NetEndPointV6::ADDR_SIZE);
+        serverAddr.sin6_family = GetWsaAddressFamily(GetSocketAddressFamily(pSocket));
+        ::memcpy(&serverAddr.sin6_addr, endpoint.GetIp().data(), EndPointV6::ADDR_SIZE);
         serverAddr.sin6_scope_id = endpoint.GetScopeId();
         serverAddr.sin6_port = endpoint.GetPort();
         return serverAddr;
     }
 
-    bool Socket::IsInitialized()
+    bool IsInitialized()
     {
-        return _socketInit;
+        return gSocketEnvironmentInit;
     }
 
-    Socket::State Socket::InitEnvironment()
+    State InitEnvironment()
     {
         WORD wVersion = MAKEWORD(2, 2);
         WSADATA wsadata;
@@ -78,15 +91,17 @@ namespace Helper
         if (LOBYTE(wsadata.wVersion) != 2 || HIBYTE(wsadata.wHighVersion) != 2)
             return State::WsaVersionError;
 
+        gSocketEnvironmentInit = true;
         return State::Success;
     }
 
-    void Socket::DestroyEnvironment()
+    void DestroyEnvironment()
     {
         ::WSACleanup();
+        gSocketEnvironmentInit = false;
     }
 
-    std::unique_ptr<SocketHandle> Socket::Create(AddressFamily family, Protocol protocol)
+    std::unique_ptr<SocketHandle> Create(AddressFamily family, Protocol protocol)
     {
         const int wsaAddrFamily = GetWsaAddressFamily(family);
         const auto [wsaProtocol, wsaSocketType] = GetWsaProtocol(protocol);
@@ -104,12 +119,10 @@ namespace Helper
             return nullptr;
         }
 
-        std::unique_ptr<SocketHandle> result(new SocketHandle());
-        result->handle = socket;
-        return result;
+        return MakeSocketHandle(socket, family, protocol);
     }
 
-    void Socket::Destroy(std::unique_ptr<SocketHandle>&& pSocket)
+    void Destroy(std::unique_ptr<SocketHandle>&& pSocket)
     {
         if (pSocket == nullptr)
             return;
@@ -117,7 +130,7 @@ namespace Helper
         ::closesocket(pSocket->handle);
     }
 
-    auto Socket::GetSocketAddressFamily(const std::unique_ptr<SocketHandle>& pSocket) -> AddressFamily
+    auto GetSocketAddressFamily(const std::unique_ptr<SocketHandle>& pSocket) -> AddressFamily
     {
         if (pSocket == nullptr)
             return AddressFamily::IpV4;
@@ -125,7 +138,7 @@ namespace Helper
         return pSocket->family;
     }
 
-    auto Socket::GetSocketProtocol(const std::unique_ptr<SocketHandle>& pSocket) -> Protocol
+    auto GetSocketProtocol(const std::unique_ptr<SocketHandle>& pSocket) -> Protocol
     {
         if (pSocket == nullptr)
             return Protocol::Tcp;
@@ -133,12 +146,12 @@ namespace Helper
         return pSocket->protocol;
     }
 
-    auto Socket::GetSystemLastError() -> int
+    auto GetSystemLastError() -> int
     {
         return ::WSAGetLastError();
     }
 
-    auto Socket::GetSocketLastError(const std::unique_ptr<SocketHandle>& pSocket) -> int
+    auto GetSocketLastError(const std::unique_ptr<SocketHandle>& pSocket) -> int
     {
         if (pSocket == nullptr)
             return 0;
@@ -146,20 +159,20 @@ namespace Helper
         return pSocket->lastError;
     }
 
-    static Socket::State ConnectInternal(const std::unique_ptr<SocketHandle>& pSocket, const SOCKADDR* pAddr, int size, int timeOutInMs)
+    static State ConnectInternal(const std::unique_ptr<SocketHandle>& pSocket, const SOCKADDR* pAddr, int size, int timeOutInMs)
     {
         const auto connectResult = ::connect(pSocket->handle, pAddr , size);
 
         // If not socket error, means connect success immediately, no need to poll.
         if (connectResult != SOCKET_ERROR)
-            return Socket::State::Success;
+            return State::Success;
 
         // If last error not BLOCK or INPROGRESS, means an error really happened.
         const int lastError = ::WSAGetLastError();
         if (lastError != WSAEINPROGRESS && lastError != WSAEWOULDBLOCK)
         {
             pSocket->lastError = lastError;
-            return Socket::State::SocketError;
+            return State::SocketError;
         }
 
         // Poll wait, timeout = -1 means infinity.
@@ -167,20 +180,25 @@ namespace Helper
         pollFd.fd = pSocket->handle;
         pollFd.events = POLLOUT;
 
-        if (WSAPoll(&pollFd, 1, timeOutInMs) == SOCKET_ERROR)
+        int pollResult = ::WSAPoll(&pollFd, 1, timeOutInMs);
+        if (pollResult == SOCKET_ERROR)
         {
-            pSocket->lastError = lastError;
-            return Socket::State::SocketError;
+            pSocket->lastError = ::WSAGetLastError();
+            return State::SocketError;
         }
+
+        if (pollResult == 0)
+            return State::Timeout;
 
         // Check poll event
         if (pollFd.revents & POLLOUT == 0)
-            return Socket::State::ConnectionFailed;
+            return State::ConnectionFailed;
 
-        return Socket::State::Success;
+        return State::Success;
     }
 
-    auto Socket::Connect(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV4& endpoint, int timeOutInMs) -> State
+    template<>
+    auto Connect<AddressFamily::IpV4>(const std::unique_ptr<SocketHandle>& pSocket, const EndPointV4& endpoint, int timeOutInMs) -> State
     {
         if (pSocket == nullptr)
             return State::InvalidSocket;
@@ -193,7 +211,8 @@ namespace Helper
         return ConnectInternal(pSocket, reinterpret_cast<SOCKADDR*>(&serverAddr), sizeof(SOCKADDR_IN), timeOutInMs);
     }
 
-    auto Socket::Connect(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV6& endpoint, int timeOutInMs) -> State
+    template<>
+    auto Connect<AddressFamily::IpV6>(const std::unique_ptr<SocketHandle>& pSocket, const EndPointV6& endpoint, int timeOutInMs) -> State
     {
         if (pSocket == nullptr)
             return State::InvalidSocket;
@@ -206,7 +225,8 @@ namespace Helper
         return ConnectInternal(pSocket, reinterpret_cast<SOCKADDR*>(&serverAddr), sizeof(SOCKADDR_IN6), timeOutInMs);
     }
 
-    auto Socket::Bind(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV4& endpoint) -> State
+    template<>
+    auto Bind<AddressFamily::IpV4>(const std::unique_ptr<SocketHandle>& pSocket, const EndPointV4& endpoint) -> State
     {
         if (pSocket == nullptr)
             return State::InvalidSocket;
@@ -226,7 +246,8 @@ namespace Helper
         return State::Success;
     }
 
-    auto Socket::Bind(const std::unique_ptr<SocketHandle>& pSocket, const NetEndPointV6& endpoint) -> State
+    template<>
+    auto Bind<AddressFamily::IpV6>(const std::unique_ptr<SocketHandle>& pSocket, const EndPointV6& endpoint) -> State
     {
         if (pSocket == nullptr)
             return State::InvalidSocket;
@@ -246,7 +267,7 @@ namespace Helper
         return State::Success;
     }
 
-    auto Socket::Listen(const std::unique_ptr<SocketHandle>& pSocket) -> State
+    auto Listen(const std::unique_ptr<SocketHandle>& pSocket) -> State
     {
         if (pSocket == nullptr)
             return State::InvalidSocket;
@@ -259,6 +280,37 @@ namespace Helper
         }
 
         return State::Success;
+    }
+
+    auto Accept(const std::unique_ptr<SocketHandle>& pSocket, int timeOutInMs) -> std::pair<State, std::unique_ptr<SocketHandle>>
+    {
+        if (pSocket == nullptr)
+            return { State::InvalidSocket, nullptr };
+
+        // Poll wait, timeout = -1 means infinity.
+        WSAPOLLFD pollFd;
+        pollFd.fd = pSocket->handle;
+        pollFd.events = POLLRDNORM;
+
+        int pollResult = ::WSAPoll(&pollFd, 1, timeOutInMs);
+        if (pollResult == SOCKET_ERROR)
+        {
+            pSocket->lastError = ::WSAGetLastError();
+            return { State::SocketError, nullptr };
+        }
+
+        if (pollResult == 0)
+            return { State::Timeout, nullptr };
+
+        // Check poll event
+        if (pollFd.revents & POLLRDNORM == 0)
+            return { State::ConnectionFailed, nullptr };
+
+        const SOCKET clientSock = ::accept(pSocket->handle, nullptr, nullptr);
+        if (clientSock == INVALID_SOCKET)
+            return { State::ConnectionFailed, nullptr };
+
+        return { State::Success, MakeSocketHandle(clientSock, GetSocketAddressFamily(pSocket), GetSocketProtocol(pSocket)) };
     }
 }
 

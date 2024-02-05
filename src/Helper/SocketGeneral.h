@@ -5,8 +5,6 @@
 
 namespace Helper::Socket
 {
-    struct SocketHandle;
-
     enum class State
     {
         Success,
@@ -71,4 +69,7 @@ namespace Helper::Socket
         uint16_t _port;
         uint32_t _scopeId;
     };
+
+    using EndPointV4 = EndPoint<AddressFamily::IpV4>;
+    using EndPointV6 = EndPoint<AddressFamily::IpV6>;
 }
