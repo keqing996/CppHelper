@@ -37,6 +37,8 @@ namespace Helper::Socket
     auto Accept(const std::unique_ptr<SocketHandle>& pSocket, int timeOutInMs = -1) -> std::pair<State, std::unique_ptr<SocketHandle>>;
 
     // Send & Recv
+    auto Send(const std::unique_ptr<SocketHandle>& pSocket, const char* pDataBuffer, int bufferSize) -> State;
+    auto Receive(const std::unique_ptr<SocketHandle>& pSocket, char* pDataBuffer, int bufferSize, int timeOutInMs = -1) -> std::pair<State, int>;
 
 #pragma region [template impl]
 

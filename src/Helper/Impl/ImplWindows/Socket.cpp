@@ -312,6 +312,27 @@ namespace Helper::Socket
 
         return { State::Success, MakeSocketHandle(clientSock, GetSocketAddressFamily(pSocket), GetSocketProtocol(pSocket)) };
     }
+
+    auto Send(const std::unique_ptr<SocketHandle>& pSocket, const char* pDataBuffer, int bufferSize) -> State
+    {
+        if (pSocket == nullptr)
+            return State::InvalidSocket;
+
+        auto sendResult = ::send(pSocket->handle, pDataBuffer, bufferSize, 0);
+        if (sendResult == SOCKET_ERROR)
+        {
+            pSocket->lastError = ::WSAGetLastError();
+            return State::SocketError;
+        }
+
+        return State::Success;
+    }
+
+    auto Receive(const std::unique_ptr<SocketHandle>& pSocket, char* pDataBuffer, int bufferSize) -> std::pair<State, int>
+    {
+        if (pSocket == nullptr)
+            return { State::InvalidSocket, 0 };
+    }
 }
 
 #endif
