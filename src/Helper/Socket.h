@@ -10,31 +10,31 @@ namespace Helper::Socket
     struct SocketHandle;
 
     // Init and clean
-    static auto IsInitialized() -> bool;
-    static auto InitEnvironment() -> State;
-    static auto DestroyEnvironment() -> void;
+    auto IsInitialized() -> bool;
+    auto InitEnvironment() -> State;
+    auto DestroyEnvironment() -> void;
 
     // Create and destroy
-    static auto Create(AddressFamily family, Protocol protocol) -> std::unique_ptr<SocketHandle>;
-    static auto Destroy(std::unique_ptr<SocketHandle>&& pSocket) -> void;
+    auto Create(AddressFamily family, Protocol protocol) -> std::unique_ptr<SocketHandle>;
+    auto Destroy(std::unique_ptr<SocketHandle>&& pSocket) -> void;
 
     // Query
-    static auto GetSocketAddressFamily(const std::unique_ptr<SocketHandle>& pSocket) -> AddressFamily;
-    static auto GetSocketProtocol(const std::unique_ptr<SocketHandle>& pSocket) -> Protocol;
+    auto GetSocketAddressFamily(const std::unique_ptr<SocketHandle>& pSocket) -> AddressFamily;
+    auto GetSocketProtocol(const std::unique_ptr<SocketHandle>& pSocket) -> Protocol;
 
     // Error handle
-    static auto GetSystemLastError() -> int;
-    static auto GetSocketLastError(const std::unique_ptr<SocketHandle>& pSocket) -> int;
+    auto GetSystemLastError() -> int;
+    auto GetSocketLastError(const std::unique_ptr<SocketHandle>& pSocket) -> int;
 
     // Client
     template<AddressFamily addrFamily>
-    static auto Connect(const std::unique_ptr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint, int timeOutInMs = -1) -> State;
+    auto Connect(const std::unique_ptr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint, int timeOutInMs = -1) -> State;
 
     // Server
     template<AddressFamily addrFamily>
-    static auto Bind(const std::unique_ptr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint) -> State;
-    static auto Listen(const std::unique_ptr<SocketHandle>& pSocket) -> State;
-    static auto Accept(const std::unique_ptr<SocketHandle>& pSocket, int timeOutInMs = -1) -> std::pair<State, std::unique_ptr<SocketHandle>>;
+    auto Bind(const std::unique_ptr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint) -> State;
+    auto Listen(const std::unique_ptr<SocketHandle>& pSocket) -> State;
+    auto Accept(const std::unique_ptr<SocketHandle>& pSocket, int timeOutInMs = -1) -> std::pair<State, std::unique_ptr<SocketHandle>>;
 
     // Send & Recv
 
