@@ -16,6 +16,8 @@ namespace Helper::Socket
         AddressFamilyNotMatch,
         ConnectionFailed,
         AcceptFailed,
+        ReceiveFailed,
+        SocketClosed,
     };
 
     enum class AddressFamily

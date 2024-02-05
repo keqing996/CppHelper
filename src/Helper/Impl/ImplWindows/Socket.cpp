@@ -328,10 +328,38 @@ namespace Helper::Socket
         return State::Success;
     }
 
-    auto Receive(const std::unique_ptr<SocketHandle>& pSocket, char* pDataBuffer, int bufferSize) -> std::pair<State, int>
+    auto Receive(const std::unique_ptr<SocketHandle>& pSocket, char* pDataBuffer, int bufferSize, int timeOutInMs) -> std::pair<State, int>
     {
         if (pSocket == nullptr)
             return { State::InvalidSocket, 0 };
+
+        // Poll wait, timeout = -1 means infinity.
+        WSAPOLLFD pollFd;
+        pollFd.fd = pSocket->handle;
+        pollFd.events = POLLIN;
+
+        int pollResult = ::WSAPoll(&pollFd, 1, timeOutInMs);
+        if (pollResult == SOCKET_ERROR)
+        {
+            pSocket->lastError = ::WSAGetLastError();
+            return { State::SocketError, 0 };
+        }
+
+        if (pollResult == 0)
+            return { State::Timeout, 0 };
+
+        // Check poll event
+        if (pollFd.revents & POLLIN == 0)
+            return { State::ReceiveFailed, 0 };
+
+        const int bytesRead = ::recv(pSocket->handle, pDataBuffer, bufferSize, 0);
+        if (bytesRead == SOCKET_ERROR)
+            return { State::ReceiveFailed, 0 };
+
+        if (bytesRead == 0)
+            return { State::SocketClosed, 0 };
+
+        return { State::Success, bytesRead };
     }
 }
 
