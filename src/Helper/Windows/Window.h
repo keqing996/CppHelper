@@ -19,26 +19,26 @@ namespace Helper
     struct OpenGLRenderContextHandle;
 #endif
 
-    struct RegisterInfo
-    {
-        IconResource* pIcon;
-        IconResource* pIconSmall;
-        CursorResource* pCursor;
-        void* pWinMsgProc;
-    };
-
-    struct StyleInfo
-    {
-        bool hasSysmenu;
-        bool hasMaxBtn;
-        bool hasMinBtn;
-        bool canResize;
-    };
-
     class Window
     {
     public:
         Window() = delete;
+
+        struct RegisterInfo
+        {
+            IconResource* pIcon;
+            IconResource* pIconSmall;
+            CursorResource* pCursor;
+            void* pWinMsgProc;
+        };
+
+        struct StyleInfo
+        {
+            bool hasSysmenu;
+            bool hasMaxBtn;
+            bool hasMinBtn;
+            bool canResize;
+        };
 
     public:
         static auto Register(const std::string& windowRegisterName) -> void;
