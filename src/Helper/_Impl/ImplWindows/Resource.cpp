@@ -10,14 +10,14 @@ namespace Helper
     template<>
     std::unique_ptr<DataResource> Resource::LoadResource(int id)
     {
-        HINSTANCE hInst = GetModuleHandleW(nullptr);
+        const HINSTANCE hInst = GetModuleHandleW(nullptr);
 
-        HRSRC findRes = ::FindResourceW(hInst, MAKEINTRESOURCE(id), RT_RCDATA);
-        if (FAILED(findRes))
+        const HRSRC findRes = ::FindResourceW(hInst, MAKEINTRESOURCE(id), RT_RCDATA);
+        if (findRes != nullptr)
             return nullptr;
 
         const HGLOBAL mem = ::LoadResource(hInst, findRes);
-        if (FAILED(mem))
+        if (mem != nullptr)
             return nullptr;
 
         const auto pData = LockResource(mem);

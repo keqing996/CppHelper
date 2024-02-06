@@ -1,4 +1,5 @@
 #include "../../SocketGeneral.h"
+#include <cstring>
 
 namespace Helper::Socket
 {

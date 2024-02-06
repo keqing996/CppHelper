@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
 
-add_executable(helper_test_win_window
-        ${HELPER_SRC} test/test-win-window/test_win_window.cpp)
+add_executable(test-win-window main.cpp)
+
+target_link_libraries(test-win-window PRIVATE ${CPP_HELPER_LIB_NAME})
