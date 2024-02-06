@@ -50,3 +50,31 @@
 #   define ASSERT_MSG(expr, msg) assert(((void)(msg), (expr)))
 #endif
 
+/* Cpp version
+ * - std::format need gcc13
+ */
+#ifdef _MSVC_LANG
+#    if _MSVC_LANG >= 202002L
+#        define CPP_VERSION 20L
+#    elif _MSVC_LANG >= 201703L
+#        define CPP_VERSION 17L
+#    elif _MSVC_LANG >= 201402L
+#        define CPP_VERSION 14L
+#    else
+#        define CPP_VERSION 11L
+#    endif
+#endif
+
+#ifdef __cplusplus
+#    if __cplusplus >= 202002L
+#        define CPP_VERSION 20L
+#    elif __cplusplus >= 201703L
+#        define CPP_VERSION 17L
+#    elif __cplusplus >= 201402L
+#        define CPP_VERSION 14L
+#    else
+#        define CPP_VERSION 11L
+#    endif
+#endif
+
+

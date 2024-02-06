@@ -2,8 +2,21 @@
 
 #include <vector>
 #include <string>
-#include <format>
 #include <mutex>
+
+#ifdef __clang__
+#   if __clang_major__ >= 17
+#       define HAVE_STD_FORMAT 1
+#   else
+#       define HAVE_STD_FORMAT 0
+#   endif
+#else
+#   define HAVE_STD_FORMAT 1
+#endif
+
+#if HAVE_STD_FORMAT
+#include <format>
+#endif
 
 namespace Helper
 {
@@ -33,22 +46,24 @@ namespace Helper
         static void LogInfo(const std::string& message);
         static void LogInfo(const char* message);
 
-        template <class... Types>
-        static void LogInfo(std::format_string<Types...> Fmt, Types&&... Args);
-
         // Log warn
         static void LogWarn(const std::string& message);
         static void LogWarn(const char* message);
-
-        template <class... Types>
-        static void LogWarn(std::format_string<Types...> Fmt, Types&&... Args);
 
         // Log error
         static void LogError(const std::string& message);
         static void LogError(const char* message);
 
+#if HAVE_STD_FORMAT
+        template <class... Types>
+        static void LogInfo(std::format_string<Types...> Fmt, Types&&... Args);
+
+        template <class... Types>
+        static void LogWarn(std::format_string<Types...> Fmt, Types&&... Args);
+
         template <class... Types>
         static void LogError(std::format_string<Types...> Fmt, Types&&... Args);
+#endif
 
     private:
         inline static std::mutex _mutex = {};
@@ -70,6 +85,7 @@ namespace Helper
             _logErrorCallVec.push_back(pFunc);
     }
 
+#if HAVE_STD_FORMAT
     template <class ... Types>
     void Logger::LogInfo(const std::format_string<Types...> Fmt, Types&&... Args)
     {
@@ -87,4 +103,5 @@ namespace Helper
     {
         LogError(std::format(Fmt, std::forward<Types>(Args)...));
     }
+#endif
 }
