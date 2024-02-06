@@ -21,7 +21,7 @@ namespace Helper
 
     public:
         template<typename T>
-        std::unique_ptr<T> LoadResource(int id);
+        ResPtr<T> LoadResource(int id);
     };
 }
 

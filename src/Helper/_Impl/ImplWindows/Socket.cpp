@@ -23,9 +23,9 @@ namespace Helper::Socket
         int lastError;
     };
 
-    static std::unique_ptr<SocketHandle> MakeSocketHandle(SOCKET handle, AddressFamily family, Protocol protocol)
+    static ResPtr<SocketHandle> MakeSocketHandle(SOCKET handle, AddressFamily family, Protocol protocol)
     {
-        std::unique_ptr<SocketHandle> result(new SocketHandle());
+        ResPtr<SocketHandle> result(new SocketHandle());
         result->handle = handle;
         result->family = family;
         result->protocol = protocol;
@@ -55,7 +55,7 @@ namespace Helper::Socket
         }
     }
 
-    static SOCKADDR_IN GetSocketAddrIpV4(const std::unique_ptr<SocketHandle>& pSocket, const EndPointV4& endpoint)
+    static SOCKADDR_IN GetSocketAddrIpV4(const ResPtr<SocketHandle>& pSocket, const EndPointV4& endpoint)
     {
         SOCKADDR_IN serverAddr {};
         serverAddr.sin_family = GetWsaAddressFamily(GetSocketAddressFamily(pSocket));
@@ -64,7 +64,7 @@ namespace Helper::Socket
         return serverAddr;
     }
 
-    static SOCKADDR_IN6 GetSocketAddrIpV6(const std::unique_ptr<SocketHandle>& pSocket, const EndPointV6& endpoint)
+    static SOCKADDR_IN6 GetSocketAddrIpV6(const ResPtr<SocketHandle>& pSocket, const EndPointV6& endpoint)
     {
         SOCKADDR_IN6 serverAddr {};
         serverAddr.sin6_family = GetWsaAddressFamily(GetSocketAddressFamily(pSocket));
@@ -101,7 +101,7 @@ namespace Helper::Socket
         gSocketEnvironmentInit = false;
     }
 
-    std::unique_ptr<SocketHandle> Create(AddressFamily family, Protocol protocol)
+    ResPtr<SocketHandle> Create(AddressFamily family, Protocol protocol)
     {
         const int wsaAddrFamily = GetWsaAddressFamily(family);
         const auto [wsaProtocol, wsaSocketType] = GetWsaProtocol(protocol);
@@ -122,7 +122,7 @@ namespace Helper::Socket
         return MakeSocketHandle(socket, family, protocol);
     }
 
-    void Destroy(std::unique_ptr<SocketHandle>&& pSocket)
+    void Destroy(ResPtr<SocketHandle>&& pSocket)
     {
         if (pSocket == nullptr)
             return;
@@ -130,7 +130,7 @@ namespace Helper::Socket
         ::closesocket(pSocket->handle);
     }
 
-    auto GetSocketAddressFamily(const std::unique_ptr<SocketHandle>& pSocket) -> AddressFamily
+    auto GetSocketAddressFamily(const ResPtr<SocketHandle>& pSocket) -> AddressFamily
     {
         if (pSocket == nullptr)
             return AddressFamily::IpV4;
@@ -138,7 +138,7 @@ namespace Helper::Socket
         return pSocket->family;
     }
 
-    auto GetSocketProtocol(const std::unique_ptr<SocketHandle>& pSocket) -> Protocol
+    auto GetSocketProtocol(const ResPtr<SocketHandle>& pSocket) -> Protocol
     {
         if (pSocket == nullptr)
             return Protocol::Tcp;
@@ -151,7 +151,7 @@ namespace Helper::Socket
         return ::WSAGetLastError();
     }
 
-    auto GetSocketLastError(const std::unique_ptr<SocketHandle>& pSocket) -> int
+    auto GetSocketLastError(const ResPtr<SocketHandle>& pSocket) -> int
     {
         if (pSocket == nullptr)
             return 0;
@@ -159,7 +159,7 @@ namespace Helper::Socket
         return pSocket->lastError;
     }
 
-    static State ConnectInternal(const std::unique_ptr<SocketHandle>& pSocket, const SOCKADDR* pAddr, int size, int timeOutInMs)
+    static State ConnectInternal(const ResPtr<SocketHandle>& pSocket, const SOCKADDR* pAddr, int size, int timeOutInMs)
     {
         const auto connectResult = ::connect(pSocket->handle, pAddr , size);
 
@@ -198,7 +198,7 @@ namespace Helper::Socket
     }
 
     template<>
-    auto Connect<AddressFamily::IpV4>(const std::unique_ptr<SocketHandle>& pSocket, const EndPointV4& endpoint, int timeOutInMs) -> State
+    auto Connect<AddressFamily::IpV4>(const ResPtr<SocketHandle>& pSocket, const EndPointV4& endpoint, int timeOutInMs) -> State
     {
         if (pSocket == nullptr)
             return State::InvalidSocket;
@@ -212,7 +212,7 @@ namespace Helper::Socket
     }
 
     template<>
-    auto Connect<AddressFamily::IpV6>(const std::unique_ptr<SocketHandle>& pSocket, const EndPointV6& endpoint, int timeOutInMs) -> State
+    auto Connect<AddressFamily::IpV6>(const ResPtr<SocketHandle>& pSocket, const EndPointV6& endpoint, int timeOutInMs) -> State
     {
         if (pSocket == nullptr)
             return State::InvalidSocket;
@@ -226,7 +226,7 @@ namespace Helper::Socket
     }
 
     template<>
-    auto Bind<AddressFamily::IpV4>(const std::unique_ptr<SocketHandle>& pSocket, const EndPointV4& endpoint) -> State
+    auto Bind<AddressFamily::IpV4>(const ResPtr<SocketHandle>& pSocket, const EndPointV4& endpoint) -> State
     {
         if (pSocket == nullptr)
             return State::InvalidSocket;
@@ -247,7 +247,7 @@ namespace Helper::Socket
     }
 
     template<>
-    auto Bind<AddressFamily::IpV6>(const std::unique_ptr<SocketHandle>& pSocket, const EndPointV6& endpoint) -> State
+    auto Bind<AddressFamily::IpV6>(const ResPtr<SocketHandle>& pSocket, const EndPointV6& endpoint) -> State
     {
         if (pSocket == nullptr)
             return State::InvalidSocket;
@@ -267,7 +267,7 @@ namespace Helper::Socket
         return State::Success;
     }
 
-    auto Listen(const std::unique_ptr<SocketHandle>& pSocket) -> State
+    auto Listen(const ResPtr<SocketHandle>& pSocket) -> State
     {
         if (pSocket == nullptr)
             return State::InvalidSocket;
@@ -282,7 +282,7 @@ namespace Helper::Socket
         return State::Success;
     }
 
-    auto Accept(const std::unique_ptr<SocketHandle>& pSocket, int timeOutInMs) -> std::pair<State, std::unique_ptr<SocketHandle>>
+    auto Accept(const ResPtr<SocketHandle>& pSocket, int timeOutInMs) -> std::pair<State, ResPtr<SocketHandle>>
     {
         if (pSocket == nullptr)
             return { State::InvalidSocket, nullptr };
@@ -313,7 +313,7 @@ namespace Helper::Socket
         return { State::Success, MakeSocketHandle(clientSock, GetSocketAddressFamily(pSocket), GetSocketProtocol(pSocket)) };
     }
 
-    auto Send(const std::unique_ptr<SocketHandle>& pSocket, const char* pDataBuffer, int bufferSize) -> State
+    auto Send(const ResPtr<SocketHandle>& pSocket, const char* pDataBuffer, int bufferSize) -> State
     {
         if (pSocket == nullptr)
             return State::InvalidSocket;
@@ -328,7 +328,7 @@ namespace Helper::Socket
         return State::Success;
     }
 
-    auto Receive(const std::unique_ptr<SocketHandle>& pSocket, char* pDataBuffer, int bufferSize, int timeOutInMs) -> std::pair<State, int>
+    auto Receive(const ResPtr<SocketHandle>& pSocket, char* pDataBuffer, int bufferSize, int timeOutInMs) -> std::pair<State, int>
     {
         if (pSocket == nullptr)
             return { State::InvalidSocket, 0 };

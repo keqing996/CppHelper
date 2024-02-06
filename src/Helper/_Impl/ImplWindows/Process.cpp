@@ -17,14 +17,14 @@ namespace Helper
         return ::GetCurrentProcessId();
     }
 
-    std::unique_ptr<ProcessHandle> Process::GetProcessHandle(int32_t processId)
+    ResPtr<ProcessHandle> Process::GetProcessHandle(int32_t processId)
     {
-        std::unique_ptr<ProcessHandle> pHandle(new ProcessHandle());
+        ResPtr<ProcessHandle> pHandle(new ProcessHandle());
         pHandle->handle = ::OpenProcess(PROCESS_ALL_ACCESS, TRUE, processId);
         return pHandle;
     }
 
-    void Process::ReleaseProcessHandle(std::unique_ptr<ProcessHandle>&& pProcess)
+    void Process::ReleaseProcessHandle(ResPtr<ProcessHandle>&& pProcess)
     {
         if (pProcess == nullptr)
             return;
@@ -32,7 +32,7 @@ namespace Helper
         ::CloseHandle(pProcess->handle);
     }
 
-    std::string Process::GetProcessName(const std::unique_ptr<ProcessHandle>& hProcess)
+    std::string Process::GetProcessName(const ResPtr<ProcessHandle>& hProcess)
     {
         wchar_t nameBuffer[256 + 1] = {};
         const DWORD length = ::GetProcessImageFileNameW(hProcess->handle, nameBuffer, 256);

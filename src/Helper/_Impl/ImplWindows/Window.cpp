@@ -58,13 +58,13 @@ namespace Helper
         ::RegisterClassExW(&wc);
     }
 
-    std::unique_ptr<Window::WindowHandle> Window::Show(const std::string& windowRegisterName, const std::string& windowTitleName, int width, int height)
+    ResPtr<Window::WindowHandle> Window::Show(const std::string& windowRegisterName, const std::string& windowTitleName, int width, int height)
     {
         StyleInfo menuStyle { true, true, true, true };
         return Show(windowRegisterName, windowTitleName, width, height, menuStyle);
     }
 
-    std::unique_ptr<Window::WindowHandle> Window::Show(const std::string& windowRegisterName, const std::string& windowTitleName, int width, int height, StyleInfo menuStyle, void* windowCreateData)
+    ResPtr<Window::WindowHandle> Window::Show(const std::string& windowRegisterName, const std::string& windowTitleName, int width, int height, StyleInfo menuStyle, void* windowCreateData)
     {
         DWORD windowStyle = WS_OVERLAPPED | WS_CAPTION;
 
@@ -85,7 +85,7 @@ namespace Helper
         const auto windowRegisterNameW = String::StringToWideString(windowRegisterName);
         const auto windowTitleNameW = String::StringToWideString(windowTitleName);
 
-        std::unique_ptr<WindowHandle> result(new WindowHandle());
+        ResPtr<WindowHandle> result(new WindowHandle());
         result->hWnd = ::CreateWindowW(
                         windowRegisterNameW.c_str(),
                         windowTitleNameW.c_str(),
@@ -106,7 +106,7 @@ namespace Helper
         return result;
     }
 
-    void Window::Destroy(std::unique_ptr<WindowHandle>&& pWindowHandle)
+    void Window::Destroy(ResPtr<WindowHandle>&& pWindowHandle)
     {
         ::DestroyWindow(pWindowHandle->hWnd);
     }
@@ -156,19 +156,19 @@ namespace Helper
         return reinterpret_cast<void*>(&DefaultWindowProc);
     }
 
-    std::unique_ptr<Window::DeviceContextHandle> Window::GetDeviceContext(const std::unique_ptr<WindowHandle>& pWindowHandle)
+    ResPtr<Window::DeviceContextHandle> Window::GetDeviceContext(const ResPtr<WindowHandle>& pWindowHandle)
     {
-        std::unique_ptr<DeviceContextHandle> result(new DeviceContextHandle());
+        ResPtr<DeviceContextHandle> result(new DeviceContextHandle());
         result->hDeviceContext = ::GetDC(pWindowHandle->hWnd);
         return result;
     }
 
-    void Window::ReleaseDeviceContext(const std::unique_ptr<WindowHandle>& hWnd, std::unique_ptr<DeviceContextHandle>&& hDeviceContext)
+    void Window::ReleaseDeviceContext(const ResPtr<WindowHandle>& hWnd, ResPtr<DeviceContextHandle>&& hDeviceContext)
     {
         ::ReleaseDC(hWnd->hWnd, hDeviceContext->hDeviceContext);
     }
 
-    void Window::DeviceContextSwapBuffer(const std::unique_ptr<DeviceContextHandle>& hDeviceContext)
+    void Window::DeviceContextSwapBuffer(const ResPtr<DeviceContextHandle>& hDeviceContext)
     {
         ::SwapBuffers(hDeviceContext->hDeviceContext);
     }
@@ -178,7 +178,7 @@ namespace Helper
         ::ReleaseCapture();
     }
 
-    auto Window::SetCapture(const std::unique_ptr<WindowHandle>& hWnd)
+    auto Window::SetCapture(const ResPtr<WindowHandle>& hWnd)
     {
         ::SetCapture(hWnd->hWnd);
     }
@@ -190,7 +190,7 @@ namespace Helper
         HGLRC hOpenGLRenderContext;
     };
 
-    bool Window::PrepareWindowPixelFormat(const std::unique_ptr<WindowHandle>& hWnd)
+    bool Window::PrepareWindowPixelFormat(const ResPtr<WindowHandle>& hWnd)
     {
         const PIXELFORMATDESCRIPTOR pfd =
         {
@@ -228,19 +228,19 @@ namespace Helper
         return ::SetPixelFormat(hdc, pixelFormat, &pfd);;
     }
 
-    std::unique_ptr<Window::OpenGLRenderContextHandle> Window::CreateRenderContext(const std::unique_ptr<DeviceContextHandle>& hDeviceContext)
+    ResPtr<Window::OpenGLRenderContextHandle> Window::CreateRenderContext(const ResPtr<DeviceContextHandle>& hDeviceContext)
     {
-        std::unique_ptr<OpenGLRenderContextHandle> result(new OpenGLRenderContextHandle());
+        ResPtr<OpenGLRenderContextHandle> result(new OpenGLRenderContextHandle());
         result->hOpenGLRenderContext = ::wglCreateContext(hDeviceContext->hDeviceContext);
         return result;
     }
 
-    bool Window::BindRenderContext(const std::unique_ptr<DeviceContextHandle>& hDeviceContext, const std::unique_ptr<OpenGLRenderContextHandle>& hRenderContext)
+    bool Window::BindRenderContext(const ResPtr<DeviceContextHandle>& hDeviceContext, const ResPtr<OpenGLRenderContextHandle>& hRenderContext)
     {
         return ::wglMakeCurrent(hDeviceContext->hDeviceContext, hRenderContext->hOpenGLRenderContext);
     }
 
-    void Window::DestroyRenderContext(std::unique_ptr<OpenGLRenderContextHandle>&& hRenderContext)
+    void Window::DestroyRenderContext(ResPtr<OpenGLRenderContextHandle>&& hRenderContext)
     {
         ::wglDeleteContext(hRenderContext->hOpenGLRenderContext);
     }

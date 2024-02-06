@@ -4,6 +4,7 @@
 
 #include "PlatformDefine.h"
 #include "SocketGeneral.h"
+#include "ResourcePtr.h"
 
 namespace Helper::Socket
 {
@@ -15,42 +16,42 @@ namespace Helper::Socket
     auto DestroyEnvironment() -> void;
 
     // Create and destroy
-    auto Create(AddressFamily family, Protocol protocol) -> std::unique_ptr<SocketHandle>;
-    auto Destroy(std::unique_ptr<SocketHandle>&& pSocket) -> void;
+    auto Create(AddressFamily family, Protocol protocol) -> ResPtr<SocketHandle>;
+    auto Destroy(ResPtr<SocketHandle>&& pSocket) -> void;
 
     // Query
-    auto GetSocketAddressFamily(const std::unique_ptr<SocketHandle>& pSocket) -> AddressFamily;
-    auto GetSocketProtocol(const std::unique_ptr<SocketHandle>& pSocket) -> Protocol;
+    auto GetSocketAddressFamily(const ResPtr<SocketHandle>& pSocket) -> AddressFamily;
+    auto GetSocketProtocol(const ResPtr<SocketHandle>& pSocket) -> Protocol;
 
     // Error handle
     auto GetSystemLastError() -> int;
-    auto GetSocketLastError(const std::unique_ptr<SocketHandle>& pSocket) -> int;
+    auto GetSocketLastError(const ResPtr<SocketHandle>& pSocket) -> int;
 
     // Client
     template<AddressFamily addrFamily>
-    auto Connect(const std::unique_ptr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint, int timeOutInMs = -1) -> State;
+    auto Connect(const ResPtr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint, int timeOutInMs = -1) -> State;
 
     // Server
     template<AddressFamily addrFamily>
-    auto Bind(const std::unique_ptr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint) -> State;
-    auto Listen(const std::unique_ptr<SocketHandle>& pSocket) -> State;
-    auto Accept(const std::unique_ptr<SocketHandle>& pSocket, int timeOutInMs = -1) -> std::pair<State, std::unique_ptr<SocketHandle>>;
+    auto Bind(const ResPtr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint) -> State;
+    auto Listen(const ResPtr<SocketHandle>& pSocket) -> State;
+    auto Accept(const ResPtr<SocketHandle>& pSocket, int timeOutInMs = -1) -> std::pair<State, ResPtr<SocketHandle>>;
 
     // Send & Recv
-    auto Send(const std::unique_ptr<SocketHandle>& pSocket, const char* pDataBuffer, int bufferSize) -> State;
-    auto Receive(const std::unique_ptr<SocketHandle>& pSocket, char* pDataBuffer, int bufferSize, int timeOutInMs = -1) -> std::pair<State, int>;
+    auto Send(const ResPtr<SocketHandle>& pSocket, const char* pDataBuffer, int bufferSize) -> State;
+    auto Receive(const ResPtr<SocketHandle>& pSocket, char* pDataBuffer, int bufferSize, int timeOutInMs = -1) -> std::pair<State, int>;
 
 #pragma region [template impl]
 
     template <AddressFamily addrFamily>
-    State Connect(const std::unique_ptr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint, int timeOutInMs)
+    State Connect(const ResPtr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint, int timeOutInMs)
     {
         ASSERT_MSG(false, "AddressFamily Error");
         return State::SystemError;
     }
 
     template <AddressFamily addrFamily>
-    State Bind(const std::unique_ptr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint)
+    State Bind(const ResPtr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint)
     {
         ASSERT_MSG(false, "AddressFamily Error");
         return State::SystemError;

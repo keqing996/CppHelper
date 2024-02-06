@@ -8,7 +8,7 @@ namespace Helper
     public:
         ResPtr() = default;
 
-        explicit ResPtr(const T* p): _ptr(p)
+        ResPtr(const T* p): _ptr(p) // NOLINT(*-explicit-constructor)
         {
         }
 
@@ -46,6 +46,21 @@ namespace Helper
         T* operator->() const
         {
             return _ptr;
+        }
+
+        bool operator==(const ResPtr& rhs) const
+        {
+            return _ptr == rhs._ptr;
+        }
+
+        bool operator==(const T* p) const
+        {
+            return _ptr == p;
+        }
+
+        explicit operator bool() const
+        {
+            return _ptr != nullptr;
         }
 
     public:

@@ -8,7 +8,7 @@
 namespace Helper
 {
     template<>
-    std::unique_ptr<DataResource> Resource::LoadResource(int id)
+    ResPtr<DataResource> Resource::LoadResource(int id)
     {
         const HINSTANCE hInst = GetModuleHandleW(nullptr);
 
@@ -24,7 +24,7 @@ namespace Helper
         if (!pData)
             return nullptr;
 
-        std::unique_ptr<DataResource> result(new DataResource());
+        ResPtr<DataResource> result(new DataResource());
         result->pData = pData;
         result->size = SizeofResource(hInst, findRes);
 
@@ -32,37 +32,37 @@ namespace Helper
     }
 
     template<>
-    std::unique_ptr<IconResource> Resource::LoadResource(int id)
+    ResPtr<IconResource> Resource::LoadResource(int id)
     {
         const auto hIcon = ::LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCE(id));
         if (hIcon == nullptr)
             return nullptr;
 
-        std::unique_ptr<IconResource> result(new IconResource());
+        ResPtr<IconResource> result(new IconResource());
         result->hIcon = hIcon;
         return result;
     }
 
     template<>
-    std::unique_ptr<BitmapResource> Resource::LoadResource(int id)
+    ResPtr<BitmapResource> Resource::LoadResource(int id)
     {
         const auto hBitmap = ::LoadBitmapW(GetModuleHandleW(nullptr), MAKEINTRESOURCE(id));
         if (hBitmap == nullptr)
             return nullptr;
 
-        std::unique_ptr<BitmapResource> result(new BitmapResource());
+        ResPtr<BitmapResource> result(new BitmapResource());
         result->hBitmap = hBitmap;
         return result;
     }
 
     template<>
-    std::unique_ptr<CursorResource> Resource::LoadResource(int id)
+    ResPtr<CursorResource> Resource::LoadResource(int id)
     {
         const auto hCursor = ::LoadCursorW(GetModuleHandleW(nullptr), MAKEINTRESOURCE(id));
         if (hCursor == nullptr)
             return nullptr;
 
-        std::unique_ptr<CursorResource> result(new CursorResource());
+        ResPtr<CursorResource> result(new CursorResource());
         result->hCursor = hCursor;
         return result;
     }
