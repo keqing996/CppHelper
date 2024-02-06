@@ -173,6 +173,16 @@ namespace Helper
         ::SwapBuffers(hDeviceContext->hDeviceContext);
     }
 
+    auto Window::ReleaseCapture()
+    {
+        ::ReleaseCapture();
+    }
+
+    auto Window::SetCapture(const std::unique_ptr<WindowHandle>& hWnd)
+    {
+        ::SetCapture(hWnd->hWnd);
+    }
+
 #ifndef DISABLE_HELPER_WINDOWS_OPENGL_SUPPORT
 
     struct Window::OpenGLRenderContextHandle
