@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../PlatformDefine.h"
+#include "../ResourcePtr.h"
 
 #if PLATFORM_WINDOWS
 
