@@ -52,8 +52,8 @@ namespace Helper
         static auto ReleaseDeviceContext(const std::unique_ptr<WindowHandle>& hWnd, std::unique_ptr<DeviceContextHandle>&& hDeviceContext) -> void;
         static auto DeviceContextSwapBuffer(const std::unique_ptr<DeviceContextHandle>& hDeviceContext) -> void;
 
-        static auto SetCapture(const std::unique_ptr<WindowHandle>& hWnd);
-        static auto ReleaseCapture();
+        static auto SetCapture(const std::unique_ptr<WindowHandle>& hWnd) -> void;
+        static auto ReleaseCapture() -> void;
 
 #ifndef DISABLE_HELPER_WINDOWS_OPENGL_SUPPORT
     public: // OpenGL Ext
