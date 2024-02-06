@@ -7,12 +7,12 @@
 
 namespace Helper
 {
-    struct WindowHandle
+    struct Window::WindowHandle
     {
         HWND hWnd;
     };
 
-    struct DeviceContextHandle
+    struct Window::DeviceContextHandle
     {
         HDC hDeviceContext;
     };
@@ -58,13 +58,13 @@ namespace Helper
         ::RegisterClassExW(&wc);
     }
 
-    std::unique_ptr<WindowHandle> Window::Show(const std::string& windowRegisterName, const std::string& windowTitleName, int width, int height)
+    std::unique_ptr<Window::WindowHandle> Window::Show(const std::string& windowRegisterName, const std::string& windowTitleName, int width, int height)
     {
         StyleInfo menuStyle { true, true, true, true };
         return Show(windowRegisterName, windowTitleName, width, height, menuStyle);
     }
 
-    std::unique_ptr<WindowHandle> Window::Show(const std::string& windowRegisterName, const std::string& windowTitleName, int width, int height, StyleInfo menuStyle, void* windowCreateData)
+    std::unique_ptr<Window::WindowHandle> Window::Show(const std::string& windowRegisterName, const std::string& windowTitleName, int width, int height, StyleInfo menuStyle, void* windowCreateData)
     {
         DWORD windowStyle = WS_OVERLAPPED | WS_CAPTION;
 
@@ -106,7 +106,7 @@ namespace Helper
         return result;
     }
 
-    void Window::Destroy(const std::unique_ptr<WindowHandle>& pWindowHandle)
+    void Window::Destroy(std::unique_ptr<WindowHandle>&& pWindowHandle)
     {
         ::DestroyWindow(pWindowHandle->hWnd);
     }
@@ -156,14 +156,14 @@ namespace Helper
         return reinterpret_cast<void*>(&DefaultWindowProc);
     }
 
-    std::unique_ptr<DeviceContextHandle> Window::GetDeviceContext(const std::unique_ptr<WindowHandle>& pWindowHandle)
+    std::unique_ptr<Window::DeviceContextHandle> Window::GetDeviceContext(const std::unique_ptr<WindowHandle>& pWindowHandle)
     {
         std::unique_ptr<DeviceContextHandle> result(new DeviceContextHandle());
         result->hDeviceContext = ::GetDC(pWindowHandle->hWnd);
         return result;
     }
 
-    void Window::ReleaseDeviceContext(const std::unique_ptr<WindowHandle>& hWnd, const std::unique_ptr<DeviceContextHandle>& hDeviceContext)
+    void Window::ReleaseDeviceContext(const std::unique_ptr<WindowHandle>& hWnd, std::unique_ptr<DeviceContextHandle>&& hDeviceContext)
     {
         ::ReleaseDC(hWnd->hWnd, hDeviceContext->hDeviceContext);
     }
@@ -173,7 +173,12 @@ namespace Helper
         ::SwapBuffers(hDeviceContext->hDeviceContext);
     }
 
-#if ENABLE_HELPER_EXT_OPENGL
+#ifndef DISABLE_HELPER_WINDOWS_OPENGL_SUPPORT
+
+    struct Window::OpenGLRenderContextHandle
+    {
+        HGLRC hOpenGLRenderContext;
+    };
 
     bool Window::PrepareWindowPixelFormat(const std::unique_ptr<WindowHandle>& hWnd)
     {
@@ -213,7 +218,7 @@ namespace Helper
         return ::SetPixelFormat(hdc, pixelFormat, &pfd);;
     }
 
-    std::unique_ptr<OpenGLRenderContextHandle> Window::CreateRenderContext(const std::unique_ptr<DeviceContextHandle>& hDeviceContext)
+    std::unique_ptr<Window::OpenGLRenderContextHandle> Window::CreateRenderContext(const std::unique_ptr<DeviceContextHandle>& hDeviceContext)
     {
         std::unique_ptr<OpenGLRenderContextHandle> result(new OpenGLRenderContextHandle());
         result->hOpenGLRenderContext = ::wglCreateContext(hDeviceContext->hDeviceContext);
@@ -225,7 +230,7 @@ namespace Helper
         return ::wglMakeCurrent(hDeviceContext->hDeviceContext, hRenderContext->hOpenGLRenderContext);
     }
 
-    void Window::DestroyRenderContext(const std::unique_ptr<OpenGLRenderContextHandle>& hRenderContext)
+    void Window::DestroyRenderContext(std::unique_ptr<OpenGLRenderContextHandle>&& hRenderContext)
     {
         ::wglDeleteContext(hRenderContext->hOpenGLRenderContext);
     }
