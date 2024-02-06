@@ -17,7 +17,7 @@ namespace Helper
     std::string System::GetMachineName()
     {
         DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
-        wchar_t nameBuffer[bufferSize] = {};
+        wchar_t nameBuffer[bufferSize];
         if (!::GetComputerNameW(nameBuffer, &bufferSize))
             return {};
 
@@ -27,7 +27,7 @@ namespace Helper
     std::string System::GetCurrentUserName()
     {
         DWORD bufferSize = 256 + 1;
-        wchar_t nameBuffer[bufferSize] = {};
+        wchar_t nameBuffer[bufferSize];
         if (!::GetUserNameW(nameBuffer, &bufferSize))
             return {};
 

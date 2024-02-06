@@ -191,7 +191,7 @@ namespace Helper::Socket
             return State::Timeout;
 
         // Check poll event
-        if (pollFd.revents & POLLOUT == 0)
+        if ((pollFd.revents & POLLOUT) == 0)
             return State::ConnectionFailed;
 
         return State::Success;
@@ -303,7 +303,7 @@ namespace Helper::Socket
             return { State::Timeout, nullptr };
 
         // Check poll event
-        if (pollFd.revents & POLLRDNORM == 0)
+        if ((pollFd.revents & POLLRDNORM) == 0)
             return { State::ConnectionFailed, nullptr };
 
         const SOCKET clientSock = ::accept(pSocket->handle, nullptr, nullptr);
@@ -349,7 +349,7 @@ namespace Helper::Socket
             return { State::Timeout, 0 };
 
         // Check poll event
-        if (pollFd.revents & POLLIN == 0)
+        if ((pollFd.revents & POLLIN) == 0)
             return { State::ReceiveFailed, 0 };
 
         const int bytesRead = ::recv(pSocket->handle, pDataBuffer, bufferSize, 0);
