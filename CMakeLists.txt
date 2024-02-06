@@ -18,3 +18,6 @@ target_include_directories(helper_test_win_window
         PRIVATE
         src/)
 
+target_include_directories(helper_test_win_window
+        PRIVATE
+        "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/")
