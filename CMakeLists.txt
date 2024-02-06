@@ -7,13 +7,13 @@ set(CPP_HELPER_LIB_NAME cpphelper)
 
 # helper lib
 
-option(CPP_HELPER_DISABLE_WINDOWS_OPENGL_SUPPORT "Disable windows openGL ext" ON)
+option(CPP_HELPER_ENABLE_WINDOWS_OPENGL "Enable windows openGL ext" OFF)
 
 file (GLOB_RECURSE HELPER_SRC src/Helper/*.cpp)
 add_library(${CPP_HELPER_LIB_NAME} STATIC ${HELPER_SRC})
 target_include_directories(${CPP_HELPER_LIB_NAME} PUBLIC src/)
 
-if (CPP_HELPER_DISABLE_WINDOWS_OPENGL_SUPPORT)
+if (NOT CPP_HELPER_ENABLE_WINDOWS_OPENGL)
     target_compile_definitions(${CPP_HELPER_LIB_NAME} PRIVATE DISABLE_HELPER_WINDOWS_OPENGL_SUPPORT)
 endif ()
 
