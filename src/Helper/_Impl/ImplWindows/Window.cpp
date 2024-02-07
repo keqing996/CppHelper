@@ -173,12 +173,12 @@ namespace Helper
         ::SwapBuffers(hDeviceContext->hDeviceContext);
     }
 
-    auto Window::ReleaseCapture()
+    void Window::ReleaseCapture()
     {
         ::ReleaseCapture();
     }
 
-    auto Window::SetCapture(const ResPtr<WindowHandle>& hWnd)
+    void Window::SetCapture(const ResPtr<WindowHandle>& hWnd)
     {
         ::SetCapture(hWnd->hWnd);
     }

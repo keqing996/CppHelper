@@ -1,14 +1,23 @@
 #pragma once
 
+#include <utility>
+#include <functional>
+
 namespace Helper
 {
     template<typename T>
     class ResPtr
     {
     public:
-        ResPtr() = default;
+        ResPtr(T* p) // NOLINT(*-explicit-constructor)
+            : _ptr(p)
+            , _cleanup(DefaultDeleter)
+        {
+        }
 
-        ResPtr(const T* p): _ptr(p) // NOLINT(*-explicit-constructor)
+        ResPtr(T* p, const std::function<void(T*)>& cleanup)
+            : _ptr(p)
+            , _cleanup(cleanup)
         {
         }
 
@@ -26,7 +35,7 @@ namespace Helper
             if (&rhs == this)
                 return *this;
 
-            delete _ptr;
+            CleanUp(_ptr);
             _ptr = rhs._ptr;
             rhs._ptr = nullptr;
 
@@ -35,7 +44,7 @@ namespace Helper
 
         ~ResPtr()
         {
-            delete _ptr;
+            CleanUp(_ptr);
         }
 
         T& operator*() const
@@ -85,7 +94,7 @@ namespace Helper
         {
             const T* temp = _ptr;
             _ptr = newRes;
-            delete temp;
+            CleanUp(temp);
         }
 
         T* GetOldAndReset(const T* newRes)
@@ -95,7 +104,31 @@ namespace Helper
             return temp;
         }
 
+        template<typename... Args>
+        static ResPtr Make(Args&&... args, const std::function<void(T*)>& cleanup = DefaultDeleter)
+        {
+            T* p = new T(std::forward<Args>(args)...);
+            return ResPtr(p, cleanup);
+        }
+
+        static void DefaultDeleter(T* p)
+        {
+            delete p;
+        }
+
     private:
-        T* _ptr = nullptr;
+
+        void CleanUp(T* target)
+        {
+            if (target == nullptr)
+                return;
+
+            if (_cleanup != nullptr)
+                _cleanup(target);
+        }
+
+    private:
+        T* _ptr;
+        std::function<void(T*)> _cleanup;
     };
 }
