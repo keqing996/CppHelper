@@ -37,6 +37,10 @@ namespace Helper
         };
 
     public:
+        static auto GetNativeHandle(const ResPtr<WindowHandle>& pWindowHandle) -> void*;
+        static auto GetNativeHandle(const ResPtr<DeviceContextHandle>& pDeviceContextHandle) -> void*;
+
+    public:
         static auto Register(const std::string& windowRegisterName) -> void;
         static auto Register(const std::string& windowRegisterName, RegisterInfo info) -> void;
         static auto Show(const std::string& windowRegisterName, const std::string& windowTitleName, int width,

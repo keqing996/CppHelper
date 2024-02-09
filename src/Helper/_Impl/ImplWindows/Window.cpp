@@ -30,6 +30,16 @@ namespace Helper
         }
     }
 
+    auto Window::GetNativeHandle(const ResPtr<WindowHandle>& pWindowHandle) -> void*
+    {
+        return pWindowHandle->hWnd;
+    }
+
+    auto Window::GetNativeHandle(const ResPtr<DeviceContextHandle>& pDeviceContextHandle) -> void*
+    {
+        return pDeviceContextHandle->hDeviceContext;
+    }
+
     void Window::Register(const std::string& windowRegisterName)
     {
         RegisterInfo info { nullptr, nullptr, nullptr, GetDefaultWinMsgProc() };
