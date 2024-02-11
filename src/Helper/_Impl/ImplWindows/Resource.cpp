@@ -1,9 +1,9 @@
 #include "../../Windows/Resource.h"
-#include "../../Windows/WindowsDefine.h"
 
 #if PLATFORM_WINDOWS
 
 #include <vector>
+#include "ResourceHandle.h"
 
 namespace Helper
 {

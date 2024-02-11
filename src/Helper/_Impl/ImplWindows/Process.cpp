@@ -1,11 +1,12 @@
 #include "../../Process.h"
 #include "../../PlatformDefine.h"
-#include "../../Windows/WindowsDefine.h"
 
 #if PLATFORM_WINDOWS
 
+#include "../../Windows/WindowsDefine.h"
 #include "../../String.h"
-#include <vector>
+#include "ProcessHandle.h"
+#include "ThreadHandle.h"
 #include <Psapi.h>
 
 #undef CreateProcess
