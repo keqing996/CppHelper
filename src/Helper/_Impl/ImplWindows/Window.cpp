@@ -4,6 +4,7 @@
 #if PLATFORM_WINDOWS
 
 #include "../../String.h"
+#include "ResourceHandle.h"
 
 namespace Helper
 {
