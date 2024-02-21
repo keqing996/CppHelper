@@ -60,16 +60,8 @@ namespace Helper
         static auto SetCapture(const ResPtr<WindowHandle>& hWnd) -> void;
         static auto ReleaseCapture() -> void;
 
-#ifndef DISABLE_HELPER_WINDOWS_OPENGL_SUPPORT
-    public: // OpenGL Ext
-        struct OpenGLRenderContextHandle;
-
         static auto PrepareWindowPixelFormat(const ResPtr<WindowHandle>& hWnd) -> bool;
-        static auto CreateRenderContext(const ResPtr<DeviceContextHandle>& hDeviceContext) -> ResPtr<OpenGLRenderContextHandle>;
-        static auto BindRenderContext(const ResPtr<DeviceContextHandle>& hDeviceContext, const ResPtr<OpenGLRenderContextHandle>& hRenderContext) -> bool;
-        static auto DestroyRenderContext(ResPtr<OpenGLRenderContextHandle>&& hRenderContext) -> void;
 
-#endif
     };
 }
 

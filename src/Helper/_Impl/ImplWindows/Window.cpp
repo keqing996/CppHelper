@@ -194,13 +194,6 @@ namespace Helper
         ::SetCapture(hWnd->hWnd);
     }
 
-#ifndef DISABLE_HELPER_WINDOWS_OPENGL_SUPPORT
-
-    struct Window::OpenGLRenderContextHandle
-    {
-        HGLRC hOpenGLRenderContext;
-    };
-
     bool Window::PrepareWindowPixelFormat(const ResPtr<WindowHandle>& hWnd)
     {
         const PIXELFORMATDESCRIPTOR pfd =
@@ -238,25 +231,6 @@ namespace Helper
 
         return ::SetPixelFormat(hdc, pixelFormat, &pfd);;
     }
-
-    ResPtr<Window::OpenGLRenderContextHandle> Window::CreateRenderContext(const ResPtr<DeviceContextHandle>& hDeviceContext)
-    {
-        ResPtr<OpenGLRenderContextHandle> result(new OpenGLRenderContextHandle());
-        result->hOpenGLRenderContext = ::wglCreateContext(hDeviceContext->hDeviceContext);
-        return result;
-    }
-
-    bool Window::BindRenderContext(const ResPtr<DeviceContextHandle>& hDeviceContext, const ResPtr<OpenGLRenderContextHandle>& hRenderContext)
-    {
-        return ::wglMakeCurrent(hDeviceContext->hDeviceContext, hRenderContext->hOpenGLRenderContext);
-    }
-
-    void Window::DestroyRenderContext(ResPtr<OpenGLRenderContextHandle>&& hRenderContext)
-    {
-        ::wglDeleteContext(hRenderContext->hOpenGLRenderContext);
-    }
-
-#endif
 }
 
 #endif
