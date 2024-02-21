@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-namespace Helper
+namespace Infra
 {
     class Memory
     {

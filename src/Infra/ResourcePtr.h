@@ -3,7 +3,7 @@
 #include <utility>
 #include <functional>
 
-namespace Helper
+namespace Infra
 {
     template<typename T>
     class ResPtr

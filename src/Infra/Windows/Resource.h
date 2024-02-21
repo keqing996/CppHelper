@@ -7,7 +7,7 @@
 
 #include <memory>
 
-namespace Helper
+namespace Infra
 {
     struct DataResource;
     struct CursorResource;

@@ -11,7 +11,7 @@
 
 #undef CreateProcess
 
-namespace Helper
+namespace Infra
 {
     int32_t Process::GetCurrentProcessId()
     {

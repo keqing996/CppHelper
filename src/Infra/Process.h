@@ -7,7 +7,7 @@
 
 #include "ResourcePtr.h"
 
-namespace Helper
+namespace Infra
 {
     struct ProcessHandle;
     struct ThreadHandle;

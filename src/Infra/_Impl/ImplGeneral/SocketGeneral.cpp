@@ -1,7 +1,7 @@
 #include "../../SocketGeneral.h"
 #include <cstring>
 
-namespace Helper::Socket
+namespace Infra::Socket
 {
     EndPoint<AddressFamily::IpV4>::EndPoint(uint32_t ip, uint16_t port)
         : _ip(ip)

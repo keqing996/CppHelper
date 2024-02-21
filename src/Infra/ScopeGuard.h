@@ -3,7 +3,7 @@
 #include <functional>
 #include "NonCopyable.h"
 
-namespace Helper
+namespace Infra
 {
     class ScopeGuard : public NonCopyable
     {

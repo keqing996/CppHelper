@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Helper
+namespace Infra
 {
     class NonConstructible
     {

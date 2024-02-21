@@ -10,7 +10,7 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
-namespace Helper::Socket
+namespace Infra::Socket
 {
 
     static bool gSocketEnvironmentInit = false;

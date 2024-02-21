@@ -4,7 +4,7 @@
 
 #if PLATFORM_WINDOWS
 
-namespace Helper
+namespace Infra
 {
     void* Memory::VirtualReserve(void* wantedAddr, size_t size)
     {

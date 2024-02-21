@@ -7,7 +7,7 @@
 #include "../../String.h"
 #include "../../ScopeGuard.h"
 
-namespace Helper
+namespace Infra
 {
     struct FileTypeFilterW
     {

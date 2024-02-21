@@ -5,7 +5,7 @@
 
 #include <android/log.h>
 
-namespace Helper
+namespace Infra
 {
     static int GetAndroidLogLevel(Android::LogLevel level)
     {

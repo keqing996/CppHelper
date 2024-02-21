@@ -6,7 +6,7 @@
 #include "SocketGeneral.h"
 #include "ResourcePtr.h"
 
-namespace Helper::Socket
+namespace Infra::Socket
 {
     struct SocketHandle;
 

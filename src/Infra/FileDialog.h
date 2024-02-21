@@ -5,7 +5,7 @@
 #include <optional>
 #include <vector>
 
-namespace Helper
+namespace Infra
 {
     class FileDialog
     {

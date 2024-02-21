@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-namespace Helper
+namespace Infra
 {
     void Logger::SetFilterLevel(Level targetLevel)
     {

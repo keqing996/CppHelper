@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-namespace Helper
+namespace Infra
 {
     void Console::CreateConsole()
     {

@@ -2,7 +2,7 @@
 
 #include "PlatformDefine.h"
 
-namespace Helper
+namespace Infra
 {
     class Console
     {

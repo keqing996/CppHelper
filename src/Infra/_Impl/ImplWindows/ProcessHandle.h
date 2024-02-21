@@ -6,7 +6,7 @@
 
 #include "../../Windows/WindowsDefine.h"
 
-namespace Helper
+namespace Infra
 {
     struct ProcessHandle
     {

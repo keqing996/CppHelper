@@ -4,16 +4,16 @@
 
 int main()
 {
-    Helper::Win::Window::RegisterInfo info {
+    Infra::Win::Window::RegisterInfo info {
         nullptr,
         nullptr,
         nullptr,
-        Helper::Win::Window::GetDefaultWinMsgProc()
+        Infra::Win::Window::GetDefaultWinMsgProc()
     };
 
-    Helper::Win::Window::Register(L"Window", info);
+    Infra::Win::Window::Register(L"Window", info);
 
-    Helper::Win::Window::StyleInfo style {
+    Infra::Win::Window::StyleInfo style {
         true,
         true,
         true,
@@ -21,44 +21,44 @@ int main()
     };
 
     {
-        void* hWnd = Helper::Win::Window::Show(L"Window", L"Title", 800, 600, style);
+        void* hWnd = Infra::Win::Window::Show(L"Window", L"Title", 800, 600, style);
 
         while (true)
         {
-            bool quit = Helper::Win::Window::MessageLoop();
+            bool quit = Infra::Win::Window::MessageLoop();
             if (quit)
                 break;
         }
 
-        Helper::Win::Window::Destroy(hWnd);
+        Infra::Win::Window::Destroy(hWnd);
     }
 
     style.hasMaxBtn = false;
     style.hasMinBtn = false;
 
     {
-        void* hWnd = Helper::Win::Window::Show(L"Window", L"Title", 800, 600, style);
+        void* hWnd = Infra::Win::Window::Show(L"Window", L"Title", 800, 600, style);
 
         while (true)
         {
-            bool quit = Helper::Win::Window::MessageLoop();
+            bool quit = Infra::Win::Window::MessageLoop();
             if (quit)
                 break;
         }
 
-        Helper::Win::Window::Destroy(hWnd);
+        Infra::Win::Window::Destroy(hWnd);
     }
 
     style.hasSysmenu = false;
 
     {
-        void* hWnd = Helper::Win::Window::Show(L"Window", L"Title", 800, 600, style);
+        void* hWnd = Infra::Win::Window::Show(L"Window", L"Title", 800, 600, style);
 
-        Helper::Timer<Helper::TimePrecision::Seconds> timer;
+        Infra::Timer<Infra::TimePrecision::Seconds> timer;
         timer.SetNow();
         while (true)
         {
-            bool quit = Helper::Win::Window::MessageLoop();
+            bool quit = Infra::Win::Window::MessageLoop();
             if (quit)
                 break;
 
@@ -66,8 +66,8 @@ int main()
                 break;
         }
 
-        Helper::Win::Window::Destroy(hWnd);
+        Infra::Win::Window::Destroy(hWnd);
     }
 
-    Helper::Win::Window::UnRegister(L"Window");
+    Infra::Win::Window::UnRegister(L"Window");
 }

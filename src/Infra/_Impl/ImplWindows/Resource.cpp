@@ -5,7 +5,7 @@
 #include <vector>
 #include "ResourceHandle.h"
 
-namespace Helper
+namespace Infra
 {
     template<>
     ResPtr<DataResource> Resource::LoadResource(int id)

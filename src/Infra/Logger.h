@@ -18,7 +18,7 @@
 #include <format>
 #endif
 
-namespace Helper
+namespace Infra
 {
     class Logger
     {

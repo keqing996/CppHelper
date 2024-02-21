@@ -6,7 +6,7 @@
 #include <ranges>
 #include <algorithm>
 
-namespace Helper::String
+namespace Infra::String
 {
     template <typename EncodeFrom, typename EncodeTo>
     std::basic_string<EncodeTo> CharByCharConvert(const std::basic_string<EncodeFrom>& sourceStr)

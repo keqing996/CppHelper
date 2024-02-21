@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <sstream>
 
-namespace Helper::File
+namespace Infra::File
 {
     std::optional<std::vector<char>> LoadBinary(const std::string& filePath)
     {

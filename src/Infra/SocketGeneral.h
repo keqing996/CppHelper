@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <array>
 
-namespace Helper::Socket
+namespace Infra::Socket
 {
     enum class State
     {

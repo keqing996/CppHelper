@@ -6,7 +6,7 @@
 #include "../../String.h"
 #include "ResourceHandle.h"
 
-namespace Helper
+namespace Infra
 {
     struct Window::WindowHandle
     {

@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace Helper
+namespace Infra
 {
     class Android
     {

@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-namespace Helper
+namespace Infra
 {
     enum class TimePrecision: int
     {

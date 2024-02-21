@@ -10,7 +10,7 @@
 #include <string>
 #include <memory>
 
-namespace Helper
+namespace Infra
 {
     class Window
     {

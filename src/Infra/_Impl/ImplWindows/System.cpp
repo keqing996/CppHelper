@@ -12,7 +12,7 @@
 #undef GetCurrentDirectory
 #undef SetCurrentDirectory
 
-namespace Helper
+namespace Infra
 {
     std::string System::GetMachineName()
     {
