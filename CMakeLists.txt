@@ -9,7 +9,7 @@ set(CPP_HELPER_LIB_NAME cpphelper)
 
 option(CPP_HELPER_ENABLE_WINDOWS_OPENGL "Enable windows openGL ext" OFF)
 
-file (GLOB_RECURSE HELPER_SRC src/Helper/*.cpp)
+file (GLOB_RECURSE HELPER_SRC src/Infra/*.cpp)
 add_library(${CPP_HELPER_LIB_NAME} STATIC ${HELPER_SRC})
 target_include_directories(${CPP_HELPER_LIB_NAME} PUBLIC src/)
 

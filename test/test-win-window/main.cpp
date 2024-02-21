@@ -1,6 +1,6 @@
 
-#include <Helper/WinApi/WinApiWindow.h>
-#include <Helper/Timer.h>
+#include <Infra/WinApi/WinApiWindow.h>
+#include <Infra/Timer.h>
 
 int main()
 {
