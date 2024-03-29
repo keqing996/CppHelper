@@ -4,8 +4,8 @@
 
 #if PLATFORM_WINDOWS
 
-#include "../ResourcePtr.h"
-
+#include "WindowEvent.h"
+#include <cstdint>
 #include <string>
 #include <memory>
 
@@ -26,7 +26,23 @@ namespace Infra
         using WindowHandle = void*;
         using DeviceContextHandle = void*;
 
+        class Event
+        {
+
+        };
+
     private:
+        Window();
+
+    public:
+        void WindowEventProcess(uint32_t message, void* wpara, void* lpara);
+
+    private:
+        WindowHandle _hWindow = nullptr;
+
+    private:
+        static void RegisterWindowClass();
+        static void UnRegisterWindowClass();
 
     private:
         inline static int _sGlobalWindowsCount = 0;
