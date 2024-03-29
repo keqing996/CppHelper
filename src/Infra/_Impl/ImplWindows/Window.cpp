@@ -6,6 +6,8 @@
 #include "../../ScopeGuard.h"
 #include "../../String.h"
 #include "../../Logger.h"
+#include "../../Windows/Keyboard.h"
+#include "../../Windows/Mouse.h"
 
 namespace Infra
 {
@@ -135,7 +137,7 @@ namespace Infra
         windowClass.hbrBackground = nullptr;
         windowClass.lpszMenuName  = nullptr;
         windowClass.lpszClassName = _sWindowRegisterName;
-        RegisterClassW(&windowClass);
+        ::RegisterClassW(&windowClass);
     }
 
     void Window::UnRegisterWindowClass()
