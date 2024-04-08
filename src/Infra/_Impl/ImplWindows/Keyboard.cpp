@@ -7,7 +7,7 @@
 
 namespace Infra
 {
-    bool Keyboard::IskeyPressed(Key key)
+    bool Keyboard::IsKeyPressed(Key key)
     {
         int virtualKey = GetWinVirtualKey(key);
 

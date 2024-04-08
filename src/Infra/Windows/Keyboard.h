@@ -40,7 +40,7 @@ namespace Infra
         };
 
     public:
-        static bool IskeyPressed(Key key);
+        static bool IsKeyPressed(Key key);
         static int GetWinVirtualKey(Key key);
 
     };
