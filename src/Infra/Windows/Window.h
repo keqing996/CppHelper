@@ -25,20 +25,35 @@ namespace Infra
     public:
         using WindowHandle = void*;
         using DeviceContextHandle = void*;
-
-        class Event
-        {
-
-        };
+        using IconHandle = void*;
 
     private:
-        Window();
+        Window(int width, int height, const std::string& title, WindowStyle style = WindowStyle::Default);
+        ~Window();
 
     public:
-        void WindowEventProcess(uint32_t message, void* wpara, void* lpara);
+        auto WindowEventProcess(uint32_t message, void* wpara, void* lpara) -> void;
+        auto SetSize(int width, int height) -> void;
+        auto GetSystemHandle() -> void*;
+        auto SetIcon(unsigned int width, unsigned int height, const std::byte* pixels) -> void;
+        auto SetWindowVisible(bool show) -> void;
+        auto SetCursorVisible(bool show) -> void;
+        auto SetCursorCapture(bool capture) -> void;
+
 
     private:
-        WindowHandle _hWindow = nullptr;
+        // Window handle
+        WindowHandle _hWindow;
+
+        // State
+        std::pair<int, int> _windowSize;
+        bool _enableKeyRepeat;
+        bool _cursorVisible;
+        bool _cursorCapture;
+
+        // Resource
+        IconHandle _hIcon;
+
 
     private:
         static void RegisterWindowClass();

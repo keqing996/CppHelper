@@ -65,6 +65,15 @@ namespace Infra
             return ::DefWindowProcW(handle, message, wParam, lParam);
         }
 
+        static std::pair<int, int> CalculateAdjustWindowSize(int width, int height, DWORD dwStyle)
+        {
+            RECT rectangle = {0, 0, width, height};
+
+            ::AdjustWindowRect(&rectangle, dwStyle, false);
+
+            return { rectangle.right - rectangle.left, rectangle.bottom - rectangle.top };
+        }
+
     private:
         static bool FixProcessDpiBySetProcessDpiAwareness()
         {
@@ -124,6 +133,87 @@ namespace Infra
         }
     };
 
+    Window::Window(int width, int height, const std::string& title, WindowStyle style)
+        : _hWindow(nullptr)
+        , _windowSize({width, height})
+        , _enableKeyRepeat(false)
+        , _cursorVisible(true)
+        , _cursorCapture(false)
+        , _hIcon(nullptr)
+    {
+        // Fix dpi
+        Support::FixProcessDpi();
+
+        // Register window
+        if (_sGlobalWindowsCount == 0)
+            RegisterWindowClass();
+
+        // Get create style
+        DWORD win32Style = WS_VISIBLE;
+        if (style == WindowStyle::None)
+            win32Style |= WS_POPUP;
+        else
+        {
+            if ((int)style & (int)WindowStyle::HaveTitleBar)
+                win32Style |= WS_CAPTION | WS_MINIMIZEBOX;
+            if ((int)style & (int)WindowStyle::HaveResize)
+                win32Style |= WS_THICKFRAME | WS_MAXIMIZEBOX;
+            if ((int)style & (int)WindowStyle::HaveClose)
+                win32Style |= WS_SYSMENU;
+        }
+
+        // Calculate create position: left & top
+        HDC screenDC = ::GetDC(nullptr);
+        int left = (::GetDeviceCaps(screenDC, HORZRES) - width) / 2;
+        int top = (::GetDeviceCaps(screenDC, VERTRES) - height) / 2;
+        ::ReleaseDC(nullptr, screenDC);
+
+        // Adjust create size
+        auto [adjustWidth, adjustHeight] = Support::CalculateAdjustWindowSize(width, height, win32Style);
+
+        // Create window
+        auto titleInWideStr = String::StringToWideString(title);
+        const wchar_t* titleWide = titleInWideStr.has_value() ? titleInWideStr->c_str() : L"Default Title";
+        _hWindow = ::CreateWindowW(
+                _sWindowRegisterName,
+                titleWide,
+                win32Style,
+                left,
+                top,
+                adjustWidth,
+                adjustHeight,
+                nullptr,
+                nullptr,
+                ::GetModuleHandleW(nullptr),
+                this);
+
+        if (!_hWindow)
+            return;
+
+        // Global counting
+        _sGlobalWindowsCount++;
+
+        // Set size again after window creation to avoid some bug.
+        SetSize(width, height);
+    }
+
+    Window::~Window()
+    {
+        // Icon
+        if (_hIcon != nullptr)
+            ::DestroyIcon(reinterpret_cast<HICON>(_hIcon));
+
+        // Destroy window
+        if (_hWindow)
+            ::DestroyWindow(reinterpret_cast<HWND>(_hWindow));
+
+        // Global counting
+        _sGlobalWindowsCount--;
+
+        if (_sGlobalWindowsCount == 0)
+            UnRegisterWindowClass();
+    }
+
     void Window::RegisterWindowClass()
     {
         WNDCLASSW windowClass;
@@ -144,6 +234,78 @@ namespace Infra
     {
         ::UnregisterClassW(_sWindowRegisterName, GetModuleHandleW(nullptr));
     }
+
+    void Window::SetSize(int width, int height)
+    {
+        HWND hWnd = reinterpret_cast<HWND>(_hWindow);
+        DWORD dwStyle = static_cast<DWORD>(::GetWindowLongPtrW(hWnd, GWL_STYLE));
+        auto [adjustWidth, adjustHeight] = Support::CalculateAdjustWindowSize(width, height, dwStyle);
+        ::SetWindowPos(hWnd, nullptr, 0, 0, adjustWidth, adjustHeight, SWP_NOMOVE | SWP_NOZORDER);
+    }
+
+    auto Window::GetSystemHandle() -> void*
+    {
+        return _hWindow;
+    }
+
+    auto Window::SetIcon(unsigned int width, unsigned int height, const std::byte* pixels) -> void
+    {
+        if (_hIcon != nullptr)
+            ::DestroyIcon(reinterpret_cast<HICON>(_hIcon));
+
+        _hIcon = nullptr;
+
+        // Change RGBA to BGRA
+        std::vector<std::byte> iconPixels(width * height * 4);
+        for (std::size_t i = 0; i < iconPixels.size() / 4; ++i)
+        {
+            iconPixels[i * 4 + 0] = pixels[i * 4 + 2];
+            iconPixels[i * 4 + 1] = pixels[i * 4 + 1];
+            iconPixels[i * 4 + 2] = pixels[i * 4 + 0];
+            iconPixels[i * 4 + 3] = pixels[i * 4 + 3];
+        }
+
+        _hIcon = ::CreateIcon(
+                GetModuleHandleW(nullptr),
+                static_cast<int>(width),
+                static_cast<int>(height),
+                1,
+                32,
+                nullptr,
+                (unsigned char*)iconPixels.data());
+
+        if (_hIcon != nullptr)
+        {
+            ::SendMessageW(
+                    reinterpret_cast<HWND>(_hWindow),
+                    WM_SETICON,
+                    ICON_BIG,
+                    reinterpret_cast<LPARAM>(_hIcon));
+
+            ::SendMessageW(
+                    reinterpret_cast<HWND>(_hWindow),
+                    WM_SETICON,
+                    ICON_SMALL,
+                    reinterpret_cast<LPARAM>(_hIcon));
+        }
+    }
+
+    auto Window::SetWindowVisible(bool show) -> void
+    {
+        ::ShowWindow(reinterpret_cast<HWND>(_hWindow), show ? SW_SHOW : SW_HIDE);
+    }
+
+    auto Window::SetCursorVisible(bool show) -> void
+    {
+        _cursorVisible = show;
+        ::SetCursor(_cursorVisible ? m_lastCursor : NULL);
+    }
+
+    auto Window::SetCursorCapture(bool capture) -> void
+    {
+
+    }
+
 
 }
 

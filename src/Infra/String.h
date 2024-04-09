@@ -25,7 +25,7 @@ namespace Infra
     public:
 
         /// \brief Convert wide string to utf8 char string. Should set local before calling this.
-        std::optional<std::string> WideStringToString(const std::wstring& wStr)
+        static std::optional<std::string> WideStringToString(const std::wstring& wStr)
         {
             const wchar_t* wideStr = wStr.c_str();
             if (wideStr == nullptr)
@@ -42,7 +42,7 @@ namespace Infra
         }
 
         /// \brief Convert utf8 char string to wide string. Should set local before calling this.
-        std::optional<std::wstring> StringToWideString(const std::string& str)
+        static std::optional<std::wstring> StringToWideString(const std::string& str)
         {
             const char* multiBytesStr = str.c_str();
             if (multiBytesStr == nullptr)
@@ -59,7 +59,7 @@ namespace Infra
         }
 
         template <typename Encoding, typename DelimType>
-        std::vector<std::basic_string_view<Encoding>> SplitView(const std::basic_string<Encoding>& inputStr, DelimType delim)
+        static std::vector<std::basic_string_view<Encoding>> SplitView(const std::basic_string<Encoding>& inputStr, DelimType delim)
         {
             auto split = std::views::split(inputStr, delim);
 
@@ -71,7 +71,7 @@ namespace Infra
         }
 
         template <typename Encoding, typename DelimType>
-        std::vector<std::basic_string<Encoding>> Split(const std::basic_string<Encoding>& inputStr, DelimType delim)
+        static std::vector<std::basic_string<Encoding>> Split(const std::basic_string<Encoding>& inputStr, DelimType delim)
         {
             auto split = std::views::split(inputStr, delim);
 
@@ -83,7 +83,7 @@ namespace Infra
         }
 
         template <typename Encoding>
-        std::basic_string<Encoding> Join(const std::vector<std::basic_string<Encoding>>& strVec, const std::basic_string<Encoding>& delim)
+        static std::basic_string<Encoding> Join(const std::vector<std::basic_string<Encoding>>& strVec, const std::basic_string<Encoding>& delim)
         {
             std::basic_ostringstream<Encoding> oss;
 
@@ -98,7 +98,7 @@ namespace Infra
         }
 
         template <typename Encoding>
-        void Replace(std::basic_string<Encoding>& inStr, const std::basic_string<Encoding>& from, const std::basic_string<Encoding>& to)
+        static void Replace(std::basic_string<Encoding>& inStr, const std::basic_string<Encoding>& from, const std::basic_string<Encoding>& to)
         {
             size_t startPos = 0;
             while ((startPos = inStr.find(from, startPos)) != std::string::npos)
@@ -109,7 +109,7 @@ namespace Infra
         }
 
         template <typename Encoding>
-        void TrimStart(std::basic_string<Encoding>& str)
+        static void TrimStart(std::basic_string<Encoding>& str)
         {
             str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](Encoding ch)
             {
@@ -118,7 +118,7 @@ namespace Infra
         }
 
         template <typename Encoding>
-        void TrimEnd(std::basic_string<Encoding>& str)
+        static void TrimEnd(std::basic_string<Encoding>& str)
         {
             str.erase(std::find_if(str.rbegin(), str.rend(), [](Encoding ch)
             {
@@ -127,7 +127,7 @@ namespace Infra
         }
 
         template <typename Encoding>
-        void Trim(std::basic_string<Encoding>& str)
+        static void Trim(std::basic_string<Encoding>& str)
         {
             TrimStart(str);
             TrimEnd(str);
