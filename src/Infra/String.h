@@ -23,18 +23,8 @@ namespace Infra
         String() = delete;
 
     public:
-        wchar_t CharToWideChar(char c, const std::locale& locale)
-        {
-            auto& facet = std::use_facet<std::ctype<wchar_t>>(locale);
-            return facet.widen(c);
-        }
 
-        char WideCharToChar(wchar_t c, const std::locale& locale)
-        {
-            auto& facet = std::use_facet<std::ctype<wchar_t>>(locale);
-            return facet.narrow(c);
-        }
-
+        /// \brief Convert wide string to utf8 char string. Should set local before calling this.
         std::optional<std::string> WideStringToString(const std::wstring& wStr)
         {
             const wchar_t* wideStr = wStr.c_str();
@@ -51,6 +41,7 @@ namespace Infra
             return std::string(charBuffer.data());
         }
 
+        /// \brief Convert utf8 char string to wide string. Should set local before calling this.
         std::optional<std::wstring> StringToWideString(const std::string& str)
         {
             const char* multiBytesStr = str.c_str();
