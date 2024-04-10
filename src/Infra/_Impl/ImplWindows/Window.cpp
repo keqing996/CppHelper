@@ -140,6 +140,7 @@ namespace Infra
         , _cursorVisible(true)
         , _cursorCapture(false)
         , _hIcon(nullptr)
+        , _hCursor(::LoadCursor(nullptr, IDC_ARROW))
     {
         // Fix dpi
         Support::FixProcessDpi();
@@ -298,12 +299,57 @@ namespace Infra
     auto Window::SetCursorVisible(bool show) -> void
     {
         _cursorVisible = show;
-        ::SetCursor(_cursorVisible ? m_lastCursor : NULL);
+        ::SetCursor(_cursorVisible ? reinterpret_cast<HCURSOR>(_hCursor) : nullptr);
     }
 
     auto Window::SetCursorCapture(bool capture) -> void
     {
+        _cursorCapture = capture;
+        if (_cursorCapture)
+        {
+            RECT rect;
+            ::GetClientRect(reinterpret_cast<HWND>(_hWindow), &rect);
+            ::MapWindowPoints(reinterpret_cast<HWND>(_hWindow), nullptr, reinterpret_cast<LPPOINT>(&rect), 2);
+            ::ClipCursor(&rect);
+        }
+        else
+        {
+            ::ClipCursor(nullptr);
+        }
+    }
 
+    auto Window::GetCursorVisible() -> bool
+    {
+        return _cursorVisible;
+    }
+
+    auto Window::GetCursorCapture() -> bool
+    {
+        return _cursorCapture;
+    }
+
+    auto Window::GetKeyRepeated() -> bool
+    {
+        return _enableKeyRepeat;
+    }
+
+    auto Window::SetKeyRepeated(bool repeated) -> void
+    {
+        _enableKeyRepeat = repeated;
+    }
+
+    auto Window::SetTitle(const std::string& title) -> void
+    {
+        auto titleInWideStr = String::StringToWideString(title);
+        const wchar_t* titleWide = titleInWideStr.has_value() ? titleInWideStr->c_str() : L"Default Title";
+        ::SetWindowTextW(reinterpret_cast<HWND>(_hWindow), titleWide);
+    }
+
+    auto Window::GetSize() -> std::pair<int, int>
+    {
+        RECT rect;
+        ::GetClientRect(reinterpret_cast<HWND>(_hWindow), &rect);
+        return { static_cast<int>(rect.right - rect.left), static_cast<int>(rect.bottom - rect.top) };
     }
 
 
