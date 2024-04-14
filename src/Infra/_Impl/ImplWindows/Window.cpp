@@ -136,7 +136,7 @@ namespace Infra
     Window::Window(int width, int height, const std::string& title, WindowStyle style)
         : _hWindow(nullptr)
         , _windowSize({width, height})
-        , _enableKeyRepeat(false)
+        , _enableKeyRepeat(true)
         , _cursorVisible(true)
         , _cursorCapture(false)
         , _hIcon(nullptr)
@@ -352,6 +352,55 @@ namespace Infra
         return { static_cast<int>(rect.right - rect.left), static_cast<int>(rect.bottom - rect.top) };
     }
 
+    auto Window::GetPosition() -> std::pair<int, int>
+    {
+        RECT rect;
+        ::GetWindowRect(reinterpret_cast<HWND>(_hWindow), &rect);
+
+        return { static_cast<int>(rect.left), static_cast<int>(rect.top) };
+    }
+
+    auto Window::SetPosition(int x, int y) -> void
+    {
+        ::SetWindowPos(
+                reinterpret_cast<HWND>(_hWindow),
+                NULL,
+                x,
+                y,
+                0,
+                0,
+                SWP_NOSIZE | SWP_NOZORDER);
+
+        // adjust cursor position
+        if(_cursorCapture)
+            SetCursorCapture(true);
+    }
+
+    auto Window::EventLoop() -> void
+    {
+        MSG message;
+        while (::PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE))
+        {
+            ::TranslateMessage(&message);
+            ::DispatchMessageW(&message);
+        }
+    }
+
+    auto Window::PopEvent() -> std::optional<WindowEvent>
+    {
+        if (_eventQueue.empty())
+            return std::nullopt;
+
+        WindowEvent result = _eventQueue.front();
+        _eventQueue.pop();
+
+        return result;
+    }
+
+    auto Window::PushEvent(const WindowEvent& event) -> void
+    {
+        _eventQueue.push(event);
+    }
 
 }
 

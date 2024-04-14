@@ -7,7 +7,8 @@
 #include "WindowEvent.h"
 #include <cstdint>
 #include <string>
-#include <memory>
+#include <queue>
+#include <optional>
 
 namespace Infra
 {
@@ -24,19 +25,23 @@ namespace Infra
     {
     public:
         using WindowHandle = void*;
-        using DeviceContextHandle = void*;
         using IconHandle = void*;
         using CurosrHandle = void*;
 
-    private:
+    public:
         Window(int width, int height, const std::string& title, WindowStyle style = WindowStyle::Default);
         ~Window();
 
     public:
+        auto EventLoop() -> void;
         auto WindowEventProcess(uint32_t message, void* wpara, void* lpara) -> void;
+        auto PopEvent() -> std::optional<WindowEvent>;
 
         auto GetSize() -> std::pair<int, int>;
         auto SetSize(int width, int height) -> void;
+
+        auto GetPosition() -> std::pair<int, int>;
+        auto SetPosition(int x, int y) -> void;
 
         auto GetSystemHandle() -> void*;
 
@@ -55,6 +60,8 @@ namespace Infra
         auto GetKeyRepeated() -> bool;
         auto SetKeyRepeated(bool repeated) -> void;
 
+    private:
+        auto PushEvent(const WindowEvent& event) -> void;
 
     private:
         // Window handle
@@ -70,6 +77,8 @@ namespace Infra
         IconHandle _hIcon;
         CurosrHandle _hCursor;
 
+        // Event
+        std::queue<WindowEvent> _eventQueue;
 
     private:
         static void RegisterWindowClass();

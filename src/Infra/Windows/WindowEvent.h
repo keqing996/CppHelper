@@ -4,25 +4,95 @@
 
 #if PLATFORM_WINDOWS
 
+#include "Keyboard.h"
+#include "Mouse.h"
+
 namespace Infra
 {
-    struct WindowSizeEvent
+    struct WindowEvent
     {
-        unsigned int width;
-        unsigned int height;
+    public:
+        enum class Type
+        {
+            // No struct event
+            Close,
+            GetFocus,
+            LostFocus,
+            MouseEnter,
+            MouseLeave,
+            // Have struct event
+            Resize,
+            Text,
+            KeyPressed,
+            KeyReleased,
+            MouseWheelMoved,
+            MouseWheelScrolled,
+            MouseButtonPressed,
+            MouseButtonReleased,
+            MouseMoved,
+            MouseEntered,
+            MouseLeft,
+        };
+
+        struct SizeData
+        {
+            unsigned int width;
+            unsigned int height;
+        };
+
+        struct KeyData
+        {
+            Keyboard::Key key;
+            bool alt;
+            bool control;
+            bool shift;
+            bool system;
+        };
+
+        struct MouseMoveData
+        {
+            int x;
+            int y;
+        };
+
+        struct MouseButtonData
+        {
+            Mouse::Button button;
+            int x;
+            int y;
+        };
+
+        struct MouseWheelData
+        {
+            int delta;
+            int x;
+            int y;
+        };
+
+        struct TextData
+        {
+            wchar_t text[2];
+        };
+
+    public:
+        Type type;
+
+        union data
+        {
+            SizeData sizeData;
+            KeyData keyData;
+            MouseMoveData mouseMoveData;
+            MouseButtonData mouseButtonData;
+            MouseWheelData mouseWheelData;
+            TextData textData;
+        };
+
+    public:
+        explicit WindowEvent(Type t)
+            : type(t)
+        {
+        }
     };
-
-    struct KeyEvent
-    {
-        Keyboard::Key code;          //!< Code of the key that has been pressed
-        Keyboard::Scancode scancode; //!< Physical code of the key that has been pressed
-        bool          alt;           //!< Is the Alt key pressed?
-        bool          control;       //!< Is the Control key pressed?
-        bool          shift;         //!< Is the Shift key pressed?
-        bool          system;        //!< Is the System key pressed?
-    };
-
-
 }
 
 #endif
