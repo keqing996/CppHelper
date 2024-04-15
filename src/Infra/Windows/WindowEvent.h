@@ -25,8 +25,7 @@ namespace Infra
             Text,
             KeyPressed,
             KeyReleased,
-            MouseWheelMoved,
-            MouseWheelScrolled,
+            MouseWheel,
             MouseButtonPressed,
             MouseButtonReleased,
             MouseMoved,
@@ -71,13 +70,10 @@ namespace Infra
 
         struct TextData
         {
-            wchar_t text[2];
+            uint32_t utf;
         };
 
-    public:
-        Type type;
-
-        union data
+        union Data
         {
             SizeData sizeData;
             KeyData keyData;
@@ -86,6 +82,10 @@ namespace Infra
             MouseWheelData mouseWheelData;
             TextData textData;
         };
+
+    public:
+        Type type;
+        Data data;
 
     public:
         explicit WindowEvent(Type t)

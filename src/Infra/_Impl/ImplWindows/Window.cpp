@@ -139,6 +139,7 @@ namespace Infra
         , _enableKeyRepeat(true)
         , _cursorVisible(true)
         , _cursorCapture(false)
+        , _isDoingResize(false)
         , _hIcon(nullptr)
         , _hCursor(::LoadCursor(nullptr, IDC_ARROW))
     {
@@ -305,17 +306,7 @@ namespace Infra
     auto Window::SetCursorCapture(bool capture) -> void
     {
         _cursorCapture = capture;
-        if (_cursorCapture)
-        {
-            RECT rect;
-            ::GetClientRect(reinterpret_cast<HWND>(_hWindow), &rect);
-            ::MapWindowPoints(reinterpret_cast<HWND>(_hWindow), nullptr, reinterpret_cast<LPPOINT>(&rect), 2);
-            ::ClipCursor(&rect);
-        }
-        else
-        {
-            ::ClipCursor(nullptr);
-        }
+        CaptureCursorInternal(_cursorCapture);
     }
 
     auto Window::GetCursorVisible() -> bool
@@ -400,6 +391,21 @@ namespace Infra
     auto Window::PushEvent(const WindowEvent& event) -> void
     {
         _eventQueue.push(event);
+    }
+
+    auto Window::CaptureCursorInternal(bool doCapture) -> void
+    {
+        if (doCapture)
+        {
+            RECT rect;
+            ::GetClientRect(reinterpret_cast<HWND>(_hWindow), &rect);
+            ::MapWindowPoints(reinterpret_cast<HWND>(_hWindow), nullptr, reinterpret_cast<LPPOINT>(&rect), 2);
+            ::ClipCursor(&rect);
+        }
+        else
+        {
+            ::ClipCursor(nullptr);
+        }
     }
 
 }

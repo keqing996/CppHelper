@@ -15,7 +15,7 @@ namespace Infra
     public:
         enum class Key: int
         {
-            Unknow = -1,
+            Unknown = -1,
             Q, W, E, R, T, Y, U, I, O, P,
             A, S, D, F, G, H, J, K, L,
             Z, X, C, V, B, N, M,
@@ -35,14 +35,14 @@ namespace Infra
             Semicolon /* ; */, Comma /* , */,
             Period /* . */, Apostrophe /* ' */,
             Slash /* / */, Backslash /* \ */, Grave /* ` */,
-            NumPadMinus, NumpadAdd, NumPadMultiply, NumPadDivide,
+            NumPadMinus, NumPadAdd, NumPadMultiply, NumPadDivide,
             Count
         };
 
     public:
         static bool IsKeyPressed(Key key);
-        static int GetWinVirtualKey(Key key);
-
+        static int KeyCodeToWinVirtualKey(Key key);
+        static Key WinVirtualKeyToKeyCode(int virtualKey, void* lParam);
     };
 
 

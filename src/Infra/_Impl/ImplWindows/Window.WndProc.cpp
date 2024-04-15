@@ -41,303 +41,189 @@ namespace Infra
             }
             case WM_SIZE:
             {
-                // Consider only events triggered by a maximize or a un-maximize
-                if (wParam != SIZE_MINIMIZED && !m_resizing && m_lastSize != getSize())
+                auto newSize = GetSize();
+                if (wParam != SIZE_MINIMIZED && _windowSize != newSize)
                 {
-                    // Update the last handled size
-                    m_lastSize = getSize();
+                    _windowSize = newSize;
 
-                    // Push a resize event
-                    Event event;
-                    event.type = Event::Resized;
-                    event.size.width = m_lastSize.x;
-                    event.size.height = m_lastSize.y;
-                    pushEvent(event);
-
-                    // Restore/update cursor grabbing
-                    grabCursor(m_cursorGrabbed);
+                    WindowEvent event(WindowEvent::Type::Resize);
+                    event.data.sizeData.width = _windowSize.first;
+                    event.data.sizeData.height = _windowSize.second;
+                    PushEvent(event);
                 }
                 break;
             }
-
-                // Start resizing
-            case WM_ENTERSIZEMOVE:
-            {
-                m_resizing = true;
-                grabCursor(false);
-                break;
-            }
-
-                // Stop resizing
-            case WM_EXITSIZEMOVE:
-            {
-                m_resizing = false;
-
-                // Ignore cases where the window has only been moved
-                if (m_lastSize != getSize())
-                {
-                    // Update the last handled size
-                    m_lastSize = getSize();
-
-                    // Push a resize event
-                    Event event;
-                    event.type = Event::Resized;
-                    event.size.width = m_lastSize.x;
-                    event.size.height = m_lastSize.y;
-                    pushEvent(event);
-                }
-
-                // Restore/update cursor grabbing
-                grabCursor(m_cursorGrabbed);
-                break;
-            }
-
-                // The system request the min/max window size and position
-            case WM_GETMINMAXINFO:
-            {
-                // We override the returned information to remove the default limit
-                // (the OS doesn't allow windows bigger than the desktop by default)
-                MINMAXINFO* info = reinterpret_cast<MINMAXINFO*>(lParam);
-                info->ptMaxTrackSize.x = 50000;
-                info->ptMaxTrackSize.y = 50000;
-                break;
-            }
-
-                // Gain focus event
             case WM_SETFOCUS:
             {
-                // Restore cursor grabbing
-                grabCursor(m_cursorGrabbed);
+                CaptureCursorInternal(_cursorCapture);
 
-                Event event;
-                event.type = Event::GainedFocus;
-                pushEvent(event);
+                WindowEvent event(WindowEvent::Type::GetFocus);
+                PushEvent(event);
                 break;
             }
-
-                // Lost focus event
             case WM_KILLFOCUS:
             {
-                // Ungrab the cursor
-                grabCursor(false);
+                CaptureCursorInternal(false);
 
-                Event event;
-                event.type = Event::LostFocus;
-                pushEvent(event);
+                WindowEvent event(WindowEvent::Type::LostFocus);
+                PushEvent(event);
                 break;
             }
-
-                // Text event
             case WM_CHAR:
             {
-                if (m_keyRepeatEnabled || ((lParam & (1 << 30)) == 0))
+                // IME: input method editor
+                // No IME: input '9' -> WM_CHAR(0x0039)
+                // With IME: input '9' -> WM_IME_CHAR(0x0039) -> WM_CHAR(0x0039)
+                // With IME: input '笨' -> WM_IME_CHAR(0xB1BF) -> WM_CHAR(0x00B1) -> WM_CHAR(0x00BF)
+                // In BMP, the Code Point segments from U+D800 to U+DFFF are permanently retained and not mapped to characters.
+                // Apart from BMP, the first two bytes of the four bytes are high bytes, and the last two bytes are low bytes.
+                // The range of the first two bytes is 0xD800 to 0xDBFF.
+                // The range of the last two bytes is 0xDC00 to 0xDFFF.
+                // It can be seen that there is no intersection between characters in BMP and those other than BMP.
+                // Therefore, if (character >= 0xD800 && character <= 0xDBFF)
+                // If this condition is met, it indicates the uncommon words that occupy 4 bytes.
+                // For uncommon words, the system will send two wm_ime_char messages, the first to send its high byte, the second to send its low byte
+                static uint32_t imeFirstWideChar;
+                if (_enableKeyRepeat || ((HIWORD(lParam) & KF_REPEAT) == 0))
                 {
-                    // Get the code of the typed character
-                    Uint32 character = static_cast<Uint32>(wParam);
-
-                    // Check if it is the first part of a surrogate pair, or a regular character
+                    auto character = static_cast<uint32_t>(wParam);
+                    // Check if it is the first part of an IME input.
                     if ((character >= 0xD800) && (character <= 0xDBFF))
+                        imeFirstWideChar = character;
+                    else
                     {
-                        // First part of a surrogate pair: store it and wait for the second one
-                        m_surrogate = static_cast<Uint16>(character);
-                    } else
-                    {
-                        // Check if it is the second part of a surrogate pair, or a regular character
+                        // Check if it is the second part of an IME input.
                         if ((character >= 0xDC00) && (character <= 0xDFFF))
                         {
-                            // Convert the UTF-16 surrogate pair to a single UTF-32 value
-                            Uint16 utf16[] = {m_surrogate, static_cast<Uint16>(character)};
-                            sf::Utf16::toUtf32(utf16, utf16 + 2, &character);
-                            m_surrogate = 0;
+                            WindowEvent event(WindowEvent::Type::Text);
+                            event.data.textData.utf = (imeFirstWideChar << 16) + character;
+                            imeFirstWideChar = 0;
+                            PushEvent(event);
                         }
-
-                        // Send a TextEntered event
-                        Event event;
-                        event.type = Event::TextEntered;
-                        event.text.unicode = character;
-                        pushEvent(event);
+                        else
+                        {
+                            WindowEvent event(WindowEvent::Type::Text);
+                            event.data.textData.utf = character;
+                            imeFirstWideChar = 0;
+                            PushEvent(event);
+                        }
                     }
                 }
                 break;
             }
-
-                // Keydown event
             case WM_KEYDOWN:
             case WM_SYSKEYDOWN:
             {
-                if (m_keyRepeatEnabled || ((HIWORD(lParam) & KF_REPEAT) == 0))
+                if (_enableKeyRepeat || ((HIWORD(lParam) & KF_REPEAT) == 0))
                 {
-                    Event event;
-                    event.type = Event::KeyPressed;
-                    event.key.alt = HIWORD(GetKeyState(VK_MENU)) != 0;
-                    event.key.control = HIWORD(GetKeyState(VK_CONTROL)) != 0;
-                    event.key.shift = HIWORD(GetKeyState(VK_SHIFT)) != 0;
-                    event.key.system = HIWORD(GetKeyState(VK_LWIN)) || HIWORD(GetKeyState(VK_RWIN));
-                    event.key.code = virtualKeyCodeToSF(wParam, lParam);
-                    event.key.scancode = toScancode(wParam, lParam);
-                    pushEvent(event);
+                    WindowEvent event(WindowEvent::Type::KeyPressed);
+                    event.data.keyData.alt = HIWORD(GetKeyState(VK_MENU)) != 0;
+                    event.data.keyData.control = HIWORD(GetKeyState(VK_CONTROL)) != 0;
+                    event.data.keyData.shift = HIWORD(GetKeyState(VK_SHIFT)) != 0;
+                    event.data.keyData.system = HIWORD(GetKeyState(VK_LWIN)) || HIWORD(GetKeyState(VK_RWIN));
+                    event.data.keyData.key = Keyboard::WinVirtualKeyToKeyCode(static_cast<int>(wParam), reinterpret_cast<void*>(lParam));
+                    PushEvent(event);
                 }
                 break;
             }
-
-                // Keyup event
             case WM_KEYUP:
             case WM_SYSKEYUP:
             {
-                Event event;
-                event.type = Event::KeyReleased;
-                event.key.alt = HIWORD(GetKeyState(VK_MENU)) != 0;
-                event.key.control = HIWORD(GetKeyState(VK_CONTROL)) != 0;
-                event.key.shift = HIWORD(GetKeyState(VK_SHIFT)) != 0;
-                event.key.system = HIWORD(GetKeyState(VK_LWIN)) || HIWORD(GetKeyState(VK_RWIN));
-                event.key.code = virtualKeyCodeToSF(wParam, lParam);
-                event.key.scancode = toScancode(wParam, lParam);
-                pushEvent(event);
+                WindowEvent event(WindowEvent::Type::KeyReleased);
+                event.data.keyData.alt = HIWORD(GetKeyState(VK_MENU)) != 0;
+                event.data.keyData.control = HIWORD(GetKeyState(VK_CONTROL)) != 0;
+                event.data.keyData.shift = HIWORD(GetKeyState(VK_SHIFT)) != 0;
+                event.data.keyData.system = HIWORD(GetKeyState(VK_LWIN)) || HIWORD(GetKeyState(VK_RWIN));
+                event.data.keyData.key = Keyboard::WinVirtualKeyToKeyCode(static_cast<int>(wParam), reinterpret_cast<void*>(lParam));
+                PushEvent(event);
                 break;
             }
-
-                // Vertical mouse wheel event
             case WM_MOUSEWHEEL:
             {
-                // Mouse position is in screen coordinates, convert it to window coordinates
                 POINT position;
-                position.x = static_cast<Int16>(LOWORD(lParam));
-                position.y = static_cast<Int16>(HIWORD(lParam));
-                ScreenToClient(m_handle, &position);
+                position.x = static_cast<int16_t>(LOWORD(lParam));
+                position.y = static_cast<int16_t>(HIWORD(lParam));
+                ::ScreenToClient(reinterpret_cast<HWND>(_hWindow), &position);
 
-                Int16 delta = static_cast<Int16>(HIWORD(wParam));
+                auto delta = static_cast<int16_t>(HIWORD(wParam));
 
-                Event event;
-
-                event.type = Event::MouseWheelMoved;
-                event.mouseWheel.delta = delta / 120;
-                event.mouseWheel.x = position.x;
-                event.mouseWheel.y = position.y;
-                pushEvent(event);
-
-                event.type = Event::MouseWheelScrolled;
-                event.mouseWheelScroll.wheel = Mouse::VerticalWheel;
-                event.mouseWheelScroll.delta = static_cast<float>(delta) / 120.f;
-                event.mouseWheelScroll.x = position.x;
-                event.mouseWheelScroll.y = position.y;
-                pushEvent(event);
+                WindowEvent event(WindowEvent::Type::MouseWheel);
+                event.data.mouseWheelData.delta = static_cast<float>(delta) / 120.f;
+                event.data.mouseWheelData.x = position.x;
+                event.data.mouseWheelData.y = position.y;
+                PushEvent(event);
                 break;
             }
-
-                // Horizontal mouse wheel event
-            case WM_MOUSEHWHEEL:
-            {
-                // Mouse position is in screen coordinates, convert it to window coordinates
-                POINT position;
-                position.x = static_cast<Int16>(LOWORD(lParam));
-                position.y = static_cast<Int16>(HIWORD(lParam));
-                ScreenToClient(m_handle, &position);
-
-                Int16 delta = static_cast<Int16>(HIWORD(wParam));
-
-                Event event;
-                event.type = Event::MouseWheelScrolled;
-                event.mouseWheelScroll.wheel = Mouse::HorizontalWheel;
-                event.mouseWheelScroll.delta = -static_cast<float>(delta) / 120.f;
-                event.mouseWheelScroll.x = position.x;
-                event.mouseWheelScroll.y = position.y;
-                pushEvent(event);
-                break;
-            }
-
-                // Mouse left button down event
             case WM_LBUTTONDOWN:
             {
-                Event event;
-                event.type = Event::MouseButtonPressed;
-                event.mouseButton.button = Mouse::Left;
-                event.mouseButton.x = static_cast<Int16>(LOWORD(lParam));
-                event.mouseButton.y = static_cast<Int16>(HIWORD(lParam));
-                pushEvent(event);
+                WindowEvent event(WindowEvent::Type::MouseButtonPressed);
+                event.data.mouseButtonData.button = Mouse::Button::Left;
+                event.data.mouseButtonData.x = static_cast<int16_t>(LOWORD(lParam));
+                event.data.mouseButtonData.y = static_cast<int16_t>(HIWORD(lParam));
+                PushEvent(event);
                 break;
             }
-
-                // Mouse left button up event
             case WM_LBUTTONUP:
             {
-                Event event;
-                event.type = Event::MouseButtonReleased;
-                event.mouseButton.button = Mouse::Left;
-                event.mouseButton.x = static_cast<Int16>(LOWORD(lParam));
-                event.mouseButton.y = static_cast<Int16>(HIWORD(lParam));
-                pushEvent(event);
+                WindowEvent event(WindowEvent::Type::MouseButtonReleased);
+                event.data.mouseButtonData.button = Mouse::Button::Left;
+                event.data.mouseButtonData.x = static_cast<int16_t>(LOWORD(lParam));
+                event.data.mouseButtonData.y = static_cast<int16_t>(HIWORD(lParam));
+                PushEvent(event);
                 break;
             }
-
-                // Mouse right button down event
             case WM_RBUTTONDOWN:
             {
-                Event event;
-                event.type = Event::MouseButtonPressed;
-                event.mouseButton.button = Mouse::Right;
-                event.mouseButton.x = static_cast<Int16>(LOWORD(lParam));
-                event.mouseButton.y = static_cast<Int16>(HIWORD(lParam));
-                pushEvent(event);
+                WindowEvent event(WindowEvent::Type::MouseButtonPressed);
+                event.data.mouseButtonData.button = Mouse::Button::Right;
+                event.data.mouseButtonData.x = static_cast<int16_t>(LOWORD(lParam));
+                event.data.mouseButtonData.y = static_cast<int16_t>(HIWORD(lParam));
+                PushEvent(event);
                 break;
             }
-
-                // Mouse right button up event
             case WM_RBUTTONUP:
             {
-                Event event;
-                event.type = Event::MouseButtonReleased;
-                event.mouseButton.button = Mouse::Right;
-                event.mouseButton.x = static_cast<Int16>(LOWORD(lParam));
-                event.mouseButton.y = static_cast<Int16>(HIWORD(lParam));
-                pushEvent(event);
+                WindowEvent event(WindowEvent::Type::MouseButtonReleased);
+                event.data.mouseButtonData.button = Mouse::Button::Right;
+                event.data.mouseButtonData.x = static_cast<int16_t>(LOWORD(lParam));
+                event.data.mouseButtonData.y = static_cast<int16_t>(HIWORD(lParam));
+                PushEvent(event);
                 break;
             }
-
-                // Mouse wheel button down event
             case WM_MBUTTONDOWN:
             {
-                Event event;
-                event.type = Event::MouseButtonPressed;
-                event.mouseButton.button = Mouse::Middle;
-                event.mouseButton.x = static_cast<Int16>(LOWORD(lParam));
-                event.mouseButton.y = static_cast<Int16>(HIWORD(lParam));
-                pushEvent(event);
+                WindowEvent event(WindowEvent::Type::MouseButtonPressed);
+                event.data.mouseButtonData.button = Mouse::Button::Middle;
+                event.data.mouseButtonData.x = static_cast<int16_t>(LOWORD(lParam));
+                event.data.mouseButtonData.y = static_cast<int16_t>(HIWORD(lParam));
+                PushEvent(event);
                 break;
             }
-
-                // Mouse wheel button up event
             case WM_MBUTTONUP:
             {
-                Event event;
-                event.type = Event::MouseButtonReleased;
-                event.mouseButton.button = Mouse::Middle;
-                event.mouseButton.x = static_cast<Int16>(LOWORD(lParam));
-                event.mouseButton.y = static_cast<Int16>(HIWORD(lParam));
-                pushEvent(event);
+                WindowEvent event(WindowEvent::Type::MouseButtonReleased);
+                event.data.mouseButtonData.button = Mouse::Button::Middle;
+                event.data.mouseButtonData.x = static_cast<int16_t>(LOWORD(lParam));
+                event.data.mouseButtonData.y = static_cast<int16_t>(HIWORD(lParam));
+                PushEvent(event);
                 break;
             }
-
-                // Mouse X button down event
             case WM_XBUTTONDOWN:
             {
-                Event event;
-                event.type = Event::MouseButtonPressed;
-                event.mouseButton.button = HIWORD(wParam) == XBUTTON1 ? Mouse::XButton1 : Mouse::XButton2;
-                event.mouseButton.x = static_cast<Int16>(LOWORD(lParam));
-                event.mouseButton.y = static_cast<Int16>(HIWORD(lParam));
-                pushEvent(event);
+                WindowEvent event(WindowEvent::Type::MouseButtonPressed);
+                event.data.mouseButtonData.button = HIWORD(wParam) == XBUTTON1 ? Mouse::Button::Addition1 : Mouse::Button::Addition2;
+                event.data.mouseButtonData.x = static_cast<int16_t>(LOWORD(lParam));
+                event.data.mouseButtonData.y = static_cast<int16_t>(HIWORD(lParam));
+                PushEvent(event);
                 break;
             }
-
-                // Mouse X button up event
             case WM_XBUTTONUP:
             {
-                Event event;
-                event.type = Event::MouseButtonReleased;
-                event.mouseButton.button = HIWORD(wParam) == XBUTTON1 ? Mouse::XButton1 : Mouse::XButton2;
-                event.mouseButton.x = static_cast<Int16>(LOWORD(lParam));
-                event.mouseButton.y = static_cast<Int16>(HIWORD(lParam));
-                pushEvent(event);
+                WindowEvent event(WindowEvent::Type::MouseButtonReleased);
+                event.data.mouseButtonData.button = HIWORD(wParam) == XBUTTON1 ? Mouse::Button::Addition1 : Mouse::Button::Addition2;
+                event.data.mouseButtonData.x = static_cast<int16_t>(LOWORD(lParam));
+                event.data.mouseButtonData.y = static_cast<int16_t>(HIWORD(lParam));
+                PushEvent(event);
                 break;
             }
 

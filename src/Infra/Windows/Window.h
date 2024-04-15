@@ -62,6 +62,7 @@ namespace Infra
 
     private:
         auto PushEvent(const WindowEvent& event) -> void;
+        auto CaptureCursorInternal(bool doCapture) -> void;
 
     private:
         // Window handle
