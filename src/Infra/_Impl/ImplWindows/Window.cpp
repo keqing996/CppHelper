@@ -347,13 +347,18 @@ namespace Infra
                 0,
                 SWP_NOSIZE | SWP_NOZORDER);
 
-        // adjust cursor position
+        // Adjust cursor position
         if(_cursorCapture)
             SetCursorCapture(true);
     }
 
     auto Window::EventLoop() -> void
     {
+        // Clear event queue
+        while (!_eventQueue.empty())
+            _eventQueue.pop();
+
+        // Fetch new event
         MSG message;
         while (::PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE))
         {

@@ -1,8 +1,9 @@
-#include "../../Console.h"
+
 #include "../../Windows/WindowsDefine.h"
 
 #if PLATFORM_WINDOWS
 
+#include "../../Windows/Console.h"
 #include <iostream>
 
 namespace Infra

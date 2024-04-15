@@ -1,9 +1,10 @@
-#include "../../FileDialog.h"
+
 #include "../../Windows/WindowsDefine.h"
 
 #if PLATFORM_WINDOWS
 
 #include <shobjidl.h>
+#include "../../Windows/FileDialog.h"
 #include "../../String.h"
 #include "../../ScopeGuard.h"
 
@@ -18,8 +19,8 @@ namespace Infra
     FileTypeFilterW GetWideStringVersion(const FileDialog::FileTypeFilter& fileFilter)
     {
         return FileTypeFilterW {
-            String::StringToWideString(fileFilter.name),
-            String::StringToWideString(fileFilter.suffix)
+            String::StringToWideString(fileFilter.name).value(),
+            String::StringToWideString(fileFilter.suffix).value()
         };
     }
 
@@ -60,7 +61,7 @@ namespace Infra
             {
                 // title
                 const auto titleMsgW = String::StringToWideString(titleMsg);
-                if (FAILED(pFileDialog->SetTitle(titleMsgW.c_str())))
+                if (FAILED(pFileDialog->SetTitle(titleMsgW->c_str())))
                     return std::nullopt;
 
                 // filter
@@ -104,7 +105,7 @@ namespace Infra
             {
                 // title
                 const auto titleMsgW = String::StringToWideString(titleMsg);
-                if (FAILED(pFileDialog->SetTitle(titleMsgW.c_str())))
+                if (FAILED(pFileDialog->SetTitle(titleMsgW->c_str())))
                     return std::nullopt;
 
                 // filter
@@ -129,7 +130,7 @@ namespace Infra
 
                 // save name
                 const auto defaultNameW = String::StringToWideString(defaultName);
-                if (FAILED(pFileDialog->SetFileName(defaultNameW.c_str())))
+                if (FAILED(pFileDialog->SetFileName(defaultNameW->c_str())))
                     return std::nullopt;
 
                 // show
@@ -153,7 +154,7 @@ namespace Infra
             {
                 // title
                 const auto titleMsgW = String::StringToWideString(titleMsg);
-                if (FAILED(pFileDialog->SetTitle(titleMsgW.c_str())))
+                if (FAILED(pFileDialog->SetTitle(titleMsgW->c_str())))
                     return std::nullopt;
 
                 // set directory

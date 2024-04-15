@@ -21,7 +21,7 @@ namespace Infra
         if (!::GetComputerNameW(nameBuffer, &bufferSize))
             return {};
 
-        return String::WideStringToString(nameBuffer);
+        return String::WideStringToString(nameBuffer).value();
     }
 
     std::string System::GetCurrentUserName()
@@ -31,30 +31,30 @@ namespace Infra
         if (!::GetUserNameW(nameBuffer, &bufferSize))
             return {};
 
-        return String::WideStringToString(nameBuffer);
+        return String::WideStringToString(nameBuffer).value();
     }
 
     std::string System::GetEnviromentVariable(const std::string& keyName)
     {
         std::vector<wchar_t> buffer(1024, 0);
-        const std::wstring keyNameW = String::StringToWideString(keyName);
+        const std::wstring keyNameW = String::StringToWideString(keyName).value();
 
         DWORD ret = ::GetEnvironmentVariableW(keyNameW.c_str(), buffer.data(), 1024 - 1);
         if (ret == 0)
             return {};
 
         if (ret < 1024 - 1)
-            return String::WideStringToString(buffer.data());
+            return String::WideStringToString(buffer.data()).value();
 
         buffer.resize(ret + 1);
         ret = ::GetEnvironmentVariableW(keyNameW.c_str(), buffer.data(), ret);
 
-        return String::WideStringToString(buffer.data());
+        return String::WideStringToString(buffer.data()).value();
     }
 
     void System::SetEnviromentVariable(const std::string& keyName, const std::string& value)
     {
-        const std::wstring keyNameW = String::StringToWideString(keyName);
+        const std::wstring keyNameW = String::StringToWideString(keyName).value();
 
         if (value.empty())
         {
@@ -62,7 +62,7 @@ namespace Infra
         }
         else
         {
-            const std::wstring valueW = String::StringToWideString(value);
+            const std::wstring valueW = String::StringToWideString(value).value();
             ::SetEnvironmentVariableW(keyNameW.c_str(), valueW.c_str());
         }
     }
@@ -83,12 +83,12 @@ namespace Infra
         const auto size = ::GetCurrentDirectoryW(0, nullptr);
         result.resize(size);
         ::GetCurrentDirectoryW(size, result.data());
-        return String::WideStringToString(result);
+        return String::WideStringToString(result).value();
     }
 
     bool System::SetCurrentDirectory(const std::string& path)
     {
-        std::wstring pathW = String::StringToWideString(path);
+        std::wstring pathW = String::StringToWideString(path).value();
         return ::SetCurrentDirectoryW(pathW.c_str());
     }
 
@@ -96,14 +96,14 @@ namespace Infra
     {
         wchar_t buffer[MAX_PATH + 1] = {};
         ::GetModuleFileNameW(nullptr, buffer, MAX_PATH);
-        return String::WideStringToString(buffer);
+        return String::WideStringToString(buffer).value();
     }
 
     std::string System::GetTempDirectory()
     {
         wchar_t buffer[MAX_PATH + 1] = {};
         ::GetTempPathW(MAX_PATH, buffer);
-        return String::WideStringToString(buffer);
+        return String::WideStringToString(buffer).value();
     }
 }
 

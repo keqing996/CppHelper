@@ -40,7 +40,7 @@ namespace Infra
         if (length == 0)
             return {};
 
-        return String::WideStringToString(nameBuffer);
+        return String::WideStringToString(nameBuffer).value();
     }
 
     std::optional<int> Process::CreateProcess(const std::string& commandLine, bool detach)
@@ -52,7 +52,7 @@ namespace Infra
         PROCESS_INFORMATION pi;
         ::ZeroMemory( &pi, sizeof(pi) );
 
-        std::wstring commandLineW = String::StringToWideString(commandLine);
+        std::wstring commandLineW = String::StringToWideString(commandLine).value();
 
         // Start the child process.
         if(!::CreateProcessW(
@@ -131,7 +131,7 @@ namespace Infra
         sa.lpSecurityDescriptor = nullptr;
         sa.bInheritHandle = true;   // Pipe handles are inherited
 
-        std::wstring commandLineW = String::StringToWideString(processCreateInfo.commandLine);
+        std::wstring commandLineW = String::StringToWideString(processCreateInfo.commandLine).value();
 
         // Start the child process.
         if(!::CreateProcessW(
@@ -150,7 +150,7 @@ namespace Infra
             return std::nullopt;
         }
 
-        // Before close child prcess's handles:
+        // Before close child process's handles:
         // ╔══════════════════╗                ╔══════════════════╗
         // ║  Parent Process  ║                ║  Child Process   ║
         // ╠══════════════════╣                ╠══════════════════╣

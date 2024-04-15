@@ -1,6 +1,9 @@
 #pragma once
 
-#include "PlatformDefine.h"
+#include "../PlatformDefine.h"
+
+#if PLATFORM_WINDOWS
+
 #include <string>
 #include <optional>
 #include <vector>
@@ -30,3 +33,5 @@ namespace Infra
         static std::optional<std::string> OpenDirectory(const std::string& titleMsg);
     };
 }
+
+#endif

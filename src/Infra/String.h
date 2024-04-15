@@ -9,12 +9,6 @@
 
 #include "PlatformDefine.h"
 
-#if PLATFORM_WINDOWS
-#   ifndef _CRT_SECURE_NO_WARNINGS
-#       define _CRT_SECURE_NO_WARNINGS
-#   endif
-#endif
-
 namespace Infra
 {
     class String
@@ -31,14 +25,29 @@ namespace Infra
             if (wideStr == nullptr)
                 return std::string{};
 
+#if !PLATFORM_WINDOWS
             int requiredSize = std::wcstombs( nullptr, wideStr, 0);
 
             std::vector<char> charBuffer(requiredSize + 1, 0);
             int size = std::wcstombs(charBuffer.data(), wideStr, requiredSize + 1);
-            if (size == -1)
+            if (size < 0)
                 return std::nullopt;
 
             return std::string(charBuffer.data());
+#else
+            int requiredSize = ::WideCharToMultiByte(CP_ACP,0,wideStr,
+                                                     wStr.size(),nullptr,0,
+                                                     nullptr,nullptr);
+
+            std::vector<char> charBuffer(requiredSize + 1, 0);
+            int size = ::WideCharToMultiByte(CP_ACP, 0, wideStr,
+                                             wStr.size(), charBuffer.data(), requiredSize,
+                                             nullptr, nullptr);
+            if (size < 0)
+                return std::nullopt;
+
+            return std::string(charBuffer.data());
+#endif
         }
 
         /// \brief Convert utf8 char string to wide string. Should set local before calling this.
@@ -48,14 +57,27 @@ namespace Infra
             if (multiBytesStr == nullptr)
                 return std::wstring{};
 
+#if !PLATFORM_WINDOWS
             int requiredSize = std::mbstowcs( nullptr, multiBytesStr, 0);
 
             std::vector<wchar_t> wideCharBuffer(requiredSize + 1, 0);
             int size = std::mbstowcs(wideCharBuffer.data(), multiBytesStr, requiredSize + 1);
-            if (size == -1)
+            if (size < 0)
                 return std::nullopt;
 
             return std::wstring(wideCharBuffer.data());
+#else
+            int requiredSize = ::MultiByteToWideChar(CP_ACP, 0, multiBytesStr,
+                                                     str.size(), nullptr, 0);
+
+            std::vector<wchar_t> wideCharBuffer(requiredSize + 1, 0);
+            int size = ::MultiByteToWideChar(CP_ACP, 0, multiBytesStr,
+                                             str.size(), wideCharBuffer.data(), requiredSize);
+            if (size < 0)
+                return std::nullopt;
+
+            return std::wstring(wideCharBuffer.data());
+#endif
         }
 
         template <typename Encoding, typename DelimType>
