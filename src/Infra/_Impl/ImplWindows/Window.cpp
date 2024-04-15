@@ -39,7 +39,9 @@ namespace Infra
             Window* pWindow = handle ? reinterpret_cast<Window*>(::GetWindowLongPtrW(handle, GWLP_USERDATA)) : nullptr;
 
             if (pWindow)
+            {
                 pWindow->WindowEventProcess(message, reinterpret_cast<void*>(wParam), reinterpret_cast<void*>(lParam));
+            }
 
             // Hack the menu system command, so that pressing ALT or F10 doesn't steal the focus
             if ((message == WM_SYSCOMMAND) && (wParam == SC_KEYMENU))
@@ -395,6 +397,16 @@ namespace Infra
     {
         SetCursorVisible(true);
         ::ReleaseCapture();
+    }
+
+    auto Window::SetWindowEventProcessFunction(const std::function<void(uint32_t, void*, void*)>& f) -> void
+    {
+        _winEventProcess = f;
+    }
+
+    auto Window::ClearWindowEventProcessFunction() -> void
+    {
+        _winEventProcess = nullptr;
     }
 
 }

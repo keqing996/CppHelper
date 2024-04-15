@@ -9,6 +9,7 @@
 #include <string>
 #include <queue>
 #include <optional>
+#include <functional>
 
 namespace Infra
 {
@@ -35,6 +36,8 @@ namespace Infra
     public:
         auto EventLoop() -> void;
         auto WindowEventProcess(uint32_t message, void* wpara, void* lpara) -> void;
+        auto SetWindowEventProcessFunction(const std::function<void(uint32_t, void*, void*)>& f) -> void;
+        auto ClearWindowEventProcessFunction() -> void;
         auto PopEvent() -> std::optional<WindowEvent>;
 
         auto GetSize() -> std::pair<int, int>;
@@ -62,6 +65,7 @@ namespace Infra
 
     private:
         auto OnWindowDestroy() -> void;
+        auto WindowEventProcessInternal(uint32_t message, void* wpara, void* lpara) -> void;
         auto PushEvent(const WindowEvent& event) -> void;
         auto CaptureCursorInternal(bool doCapture) -> void;
 
@@ -82,6 +86,9 @@ namespace Infra
 
         // Event
         std::queue<WindowEvent> _eventQueue;
+
+        // Additional handler
+        std::function<void(uint32_t, void*, void*)> _winEventProcess;
 
     private:
         static void RegisterWindowClass();
