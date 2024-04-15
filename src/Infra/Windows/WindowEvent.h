@@ -29,8 +29,6 @@ namespace Infra
             MouseButtonPressed,
             MouseButtonReleased,
             MouseMoved,
-            MouseEntered,
-            MouseLeft,
         };
 
         struct SizeData

@@ -61,6 +61,7 @@ namespace Infra
         auto SetKeyRepeated(bool repeated) -> void;
 
     private:
+        auto OnWindowDestroy() -> void;
         auto PushEvent(const WindowEvent& event) -> void;
         auto CaptureCursorInternal(bool doCapture) -> void;
 
@@ -73,6 +74,7 @@ namespace Infra
         bool _enableKeyRepeat;
         bool _cursorVisible;
         bool _cursorCapture;
+        bool _mouseInsideWindow;
 
         // Resource
         IconHandle _hIcon;

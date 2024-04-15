@@ -22,7 +22,7 @@ namespace Infra
         {
             case WM_DESTROY:
             {
-                cleanup();
+                OnWindowDestroy();
                 break;
             }
             case WM_CLOSE:
@@ -226,101 +226,50 @@ namespace Infra
                 PushEvent(event);
                 break;
             }
-
-                // Mouse leave event
-            case WM_MOUSELEAVE:
-            {
-                // Avoid this firing a second time in case the cursor is dragged outside
-                if (m_mouseInside)
-                {
-                    m_mouseInside = false;
-
-                    // Generate a MouseLeft event
-                    Event event;
-                    event.type = Event::MouseLeft;
-                    pushEvent(event);
-                }
-                break;
-            }
-
-                // Mouse move event
             case WM_MOUSEMOVE:
             {
-                // Extract the mouse local coordinates
-                int x = static_cast<Int16>(LOWORD(lParam));
-                int y = static_cast<Int16>(HIWORD(lParam));
+                HWND hWnd = reinterpret_cast<HWND>(_hWindow);
+                int x = static_cast<int16_t>(LOWORD(lParam));
+                int y = static_cast<int16_t>(HIWORD(lParam));
 
-                // Get the client area of the window
                 RECT area;
-                ::GetClientRect(m_handle, &area);
+                ::GetClientRect(hWnd, &area);
 
                 // Capture the mouse in case the user wants to drag it outside
                 if ((wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON | MK_XBUTTON1 | MK_XBUTTON2)) == 0)
                 {
-                    // Only release the capture if we really have it
-                    if (::GetCapture() == m_handle)
+                    if (::GetCapture() == hWnd)
                         ::ReleaseCapture();
-                } else if (::GetCapture() != m_handle)
+                }
+                else if (::GetCapture() != hWnd)
                 {
-                    // Set the capture to continue receiving mouse events
-                    ::SetCapture(m_handle);
+                    ::SetCapture(hWnd);
                 }
 
-                // If the cursor is outside the client area...
+                // Mouse is out of window
                 if ((x < area.left) || (x > area.right) || (y < area.top) || (y > area.bottom))
                 {
-                    // and it used to be inside, the mouse left it.
-                    if (m_mouseInside)
+                    if (_mouseInsideWindow)
                     {
-                        m_mouseInside = false;
-
-                        // No longer care for the mouse leaving the window
-                        setTracking(false);
-
-                        // Generate a MouseLeft event
-                        Event event;
-                        event.type = Event::MouseLeft;
-                        pushEvent(event);
+                        _mouseInsideWindow = false;
+                        WindowEvent event(WindowEvent::Type::MouseLeave);
+                        PushEvent(event);
                     }
-                } else
+                }
+                else
                 {
-                    // and vice-versa
-                    if (!m_mouseInside)
+                    if (!_mouseInsideWindow)
                     {
-                        m_mouseInside = true;
-
-                        // Look for the mouse leaving the window
-                        setTracking(true);
-
-                        // Generate a MouseEntered event
-                        Event event;
-                        event.type = Event::MouseEntered;
-                        pushEvent(event);
+                        _mouseInsideWindow = true;
+                        WindowEvent event(WindowEvent::Type::MouseEnter);
+                        PushEvent(event);
                     }
                 }
 
-                // Generate a MouseMove event
-                Event event;
-                event.type = Event::MouseMoved;
-                event.mouseMove.x = x;
-                event.mouseMove.y = y;
-                pushEvent(event);
-                break;
-            }
-
-                // Hardware configuration change event
-            case WM_DEVICECHANGE:
-            {
-                // Some sort of device change has happened, update joystick connections
-                if ((wParam == DBT_DEVICEARRIVAL) || (wParam == DBT_DEVICEREMOVECOMPLETE))
-                {
-                    // Some sort of device change has happened, update joystick connections if it is a device interface
-                    DEV_BROADCAST_HDR* deviceBroadcastHeader = reinterpret_cast<DEV_BROADCAST_HDR*>(lParam);
-
-                    if (deviceBroadcastHeader && (deviceBroadcastHeader->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE))
-                        JoystickImpl::updateConnections();
-                }
-
+                WindowEvent event(WindowEvent::Type::MouseMoved);
+                event.data.mouseMoveData.x = x;
+                event.data.mouseMoveData.y = y;
+                PushEvent(event);
                 break;
             }
         }

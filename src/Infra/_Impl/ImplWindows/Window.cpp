@@ -6,8 +6,6 @@
 #include "../../ScopeGuard.h"
 #include "../../String.h"
 #include "../../Logger.h"
-#include "../../Windows/Keyboard.h"
-#include "../../Windows/Mouse.h"
 
 namespace Infra
 {
@@ -32,33 +30,18 @@ namespace Infra
 
         static LRESULT CALLBACK DefaultWndProc(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
         {
-            // Associate handle and Window instance when the creation message is received
             if (message == WM_CREATE)
             {
-                // Get WindowImplWin32 instance (it was passed as the last argument of CreateWindow)
                 LONG_PTR window = reinterpret_cast<LONG_PTR>(reinterpret_cast<CREATESTRUCT*>(lParam)->lpCreateParams);
-
-                // Set as the "user data" parameter of the window
                 ::SetWindowLongPtrW(handle, GWLP_USERDATA, window);
             }
 
-            // Get the WindowImpl instance corresponding to the window handle
-            Window* window = handle ? reinterpret_cast<Window*>(::GetWindowLongPtrW(handle, GWLP_USERDATA)) : nullptr;
+            Window* pWindow = handle ? reinterpret_cast<Window*>(::GetWindowLongPtrW(handle, GWLP_USERDATA)) : nullptr;
 
-            // Forward the event to the appropriate function
-            if (window)
-            {
-                window->WindowEventProcess(message, reinterpret_cast<void*>(wParam), reinterpret_cast<void*>(lParam));
+            if (pWindow)
+                pWindow->WindowEventProcess(message, reinterpret_cast<void*>(wParam), reinterpret_cast<void*>(lParam));
 
-                if (window->m_callback)
-                    return ::CallWindowProcW(reinterpret_cast<WNDPROC>(window->m_callback), handle, message, wParam, lParam);
-            }
-
-            // We don't forward the WM_CLOSE message to prevent the OS from automatically destroying the window
-            if (message == WM_CLOSE)
-                return 0;
-
-            // Don't forward the menu system command, so that pressing ALT or F10 doesn't steal the focus
+            // Hack the menu system command, so that pressing ALT or F10 doesn't steal the focus
             if ((message == WM_SYSCOMMAND) && (wParam == SC_KEYMENU))
                 return 0;
 
@@ -139,7 +122,7 @@ namespace Infra
         , _enableKeyRepeat(true)
         , _cursorVisible(true)
         , _cursorCapture(false)
-        , _isDoingResize(false)
+        , _mouseInsideWindow(false)
         , _hIcon(nullptr)
         , _hCursor(::LoadCursor(nullptr, IDC_ARROW))
     {
@@ -406,6 +389,12 @@ namespace Infra
         {
             ::ClipCursor(nullptr);
         }
+    }
+
+    auto Window::OnWindowDestroy() -> void
+    {
+        SetCursorVisible(true);
+        ::ReleaseCapture();
     }
 
 }
