@@ -30,7 +30,7 @@ namespace Infra
         {
             case WM_DESTROY:
             {
-                OnWindowDestroy();
+                // Do nothing for now.
                 break;
             }
             case WM_CLOSE:

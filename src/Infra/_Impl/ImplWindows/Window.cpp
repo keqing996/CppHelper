@@ -43,6 +43,11 @@ namespace Infra
                 pWindow->WindowEventProcess(message, reinterpret_cast<void*>(wParam), reinterpret_cast<void*>(lParam));
             }
 
+            // If drop WM_CLOSE into DefWindowProcW, window will destroy.
+            // Push message to event queue, and throw it to user.
+            if (message == WM_CLOSE)
+                return 0;
+
             // Hack the menu system command, so that pressing ALT or F10 doesn't steal the focus
             if ((message == WM_SYSCOMMAND) && (wParam == SC_KEYMENU))
                 return 0;
@@ -118,7 +123,7 @@ namespace Infra
         }
     };
 
-    Window::Window(int width, int height, const std::string& title, WindowStyle style)
+    Window::Window(int width, int height, const std::string& title, int style)
         : _hWindow(nullptr)
         , _windowSize({width, height})
         , _enableKeyRepeat(true)
@@ -137,15 +142,15 @@ namespace Infra
 
         // Get create style
         DWORD win32Style = WS_VISIBLE;
-        if (style == WindowStyle::None)
+        if (style == (int)WindowStyle::None)
             win32Style |= WS_POPUP;
         else
         {
-            if ((int)style & (int)WindowStyle::HaveTitleBar)
+            if (style & (int)WindowStyle::HaveTitleBar)
                 win32Style |= WS_CAPTION | WS_MINIMIZEBOX;
-            if ((int)style & (int)WindowStyle::HaveResize)
+            if (style & (int)WindowStyle::HaveResize)
                 win32Style |= WS_THICKFRAME | WS_MAXIMIZEBOX;
-            if ((int)style & (int)WindowStyle::HaveClose)
+            if (style & (int)WindowStyle::HaveClose)
                 win32Style |= WS_SYSMENU;
         }
 
@@ -186,6 +191,9 @@ namespace Infra
 
     Window::~Window()
     {
+        SetCursorVisible(true);
+        ::ReleaseCapture();
+
         // Icon
         if (_hIcon != nullptr)
             ::DestroyIcon(reinterpret_cast<HICON>(_hIcon));
@@ -367,10 +375,15 @@ namespace Infra
         }
     }
 
-    auto Window::PopEvent() -> std::optional<WindowEvent>
+    auto Window::HasEvent() -> bool
+    {
+        return !_eventQueue.empty();
+    }
+
+    auto Window::PopEvent() -> WindowEvent
     {
         if (_eventQueue.empty())
-            return std::nullopt;
+            return WindowEvent(WindowEvent::Type::None);
 
         WindowEvent result = _eventQueue.front();
         _eventQueue.pop();
@@ -396,12 +409,6 @@ namespace Infra
         {
             ::ClipCursor(nullptr);
         }
-    }
-
-    auto Window::OnWindowDestroy() -> void
-    {
-        SetCursorVisible(true);
-        ::ReleaseCapture();
     }
 
     auto Window::SetWindowEventProcessFunction(const std::function<void(uint32_t, void*, void*)>& f) -> void

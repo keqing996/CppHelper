@@ -30,7 +30,7 @@ namespace Infra
         using CurosrHandle = void*;
 
     public:
-        Window(int width, int height, const std::string& title, WindowStyle style = WindowStyle::Default);
+        Window(int width, int height, const std::string& title, int style = (int)WindowStyle::Default);
         ~Window();
 
     public:
@@ -38,7 +38,8 @@ namespace Infra
         auto WindowEventProcess(uint32_t message, void* wpara, void* lpara) -> void;
         auto SetWindowEventProcessFunction(const std::function<void(uint32_t, void*, void*)>& f) -> void;
         auto ClearWindowEventProcessFunction() -> void;
-        auto PopEvent() -> std::optional<WindowEvent>;
+        auto HasEvent() -> bool;
+        auto PopEvent() -> WindowEvent;
 
         auto GetSize() -> std::pair<int, int>;
         auto SetSize(int width, int height) -> void;
@@ -64,7 +65,6 @@ namespace Infra
         auto SetKeyRepeated(bool repeated) -> void;
 
     private:
-        auto OnWindowDestroy() -> void;
         auto WindowEventProcessInternal(uint32_t message, void* wpara, void* lpara) -> void;
         auto PushEvent(const WindowEvent& event) -> void;
         auto CaptureCursorInternal(bool doCapture) -> void;

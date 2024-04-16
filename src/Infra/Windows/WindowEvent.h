@@ -14,6 +14,7 @@ namespace Infra
     public:
         enum class Type
         {
+            None,
             // No struct event
             Close,
             GetFocus,
