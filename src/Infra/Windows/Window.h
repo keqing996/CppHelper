@@ -28,6 +28,8 @@ namespace Infra
         using WindowHandle = void*;
         using IconHandle = void*;
         using CurosrHandle = void*;
+        using DeviceContextHandle = void*;
+        using GLContextHandle = void*;
 
     public:
         Window(int width, int height, const std::string& title, int style = (int)WindowStyle::Default);
@@ -35,6 +37,8 @@ namespace Infra
 
     public:
         auto EventLoop() -> void;
+        auto CreateOpenGLContext() -> void;
+        auto SwapBuffer() -> void;
         auto WindowEventProcess(uint32_t message, void* wpara, void* lpara) -> void;
         auto SetWindowEventProcessFunction(const std::function<void(uint32_t, void*, void*)>& f) -> void;
         auto ClearWindowEventProcessFunction() -> void;
@@ -72,6 +76,7 @@ namespace Infra
     private:
         // Window handle
         WindowHandle _hWindow;
+        DeviceContextHandle _hDeviceHandle;
 
         // State
         std::pair<int, int> _windowSize;
@@ -89,6 +94,9 @@ namespace Infra
 
         // Additional handler
         std::function<void(uint32_t, void*, void*)> _winEventProcess;
+
+        // OpenGL
+        GLContextHandle _hGLContext;
 
     private:
         static void RegisterWindowClass();

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-set(TEST_NAME test-socket)
+set(TEST_NAME test-win-window-opengl)
 
 add_executable(${TEST_NAME} main.cpp)
 

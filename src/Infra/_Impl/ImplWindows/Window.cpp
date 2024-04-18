@@ -3,9 +3,13 @@
 
 #if PLATFORM_WINDOWS
 
+#pragma comment(lib, "opengl32.lib")
+
 #include "../../ScopeGuard.h"
 #include "../../String.h"
 #include "../../Logger.h"
+
+#include "../../Windows/Glad/Gl.h"
 
 namespace Infra
 {
@@ -125,6 +129,7 @@ namespace Infra
 
     Window::Window(int width, int height, const std::string& title, int style)
         : _hWindow(nullptr)
+        , _hDeviceHandle(nullptr)
         , _windowSize({width, height})
         , _enableKeyRepeat(true)
         , _cursorVisible(true)
@@ -132,6 +137,7 @@ namespace Infra
         , _mouseInsideWindow(false)
         , _hIcon(nullptr)
         , _hCursor(::LoadCursor(nullptr, IDC_ARROW))
+        , _hGLContext(nullptr)
     {
         // Fix dpi
         Support::FixProcessDpi();
@@ -194,13 +200,17 @@ namespace Infra
         SetCursorVisible(true);
         ::ReleaseCapture();
 
+        // Release openGL
+        ::wglMakeCurrent(reinterpret_cast<HDC>(_hDeviceHandle), nullptr);
+        ::wglDeleteContext(reinterpret_cast<HGLRC>(_hGLContext));
+        ::ReleaseDC(reinterpret_cast<HWND>(_hWindow), reinterpret_cast<HDC>(_hDeviceHandle));
+
         // Icon
         if (_hIcon != nullptr)
             ::DestroyIcon(reinterpret_cast<HICON>(_hIcon));
 
         // Destroy window
-        if (_hWindow)
-            ::DestroyWindow(reinterpret_cast<HWND>(_hWindow));
+        ::DestroyWindow(reinterpret_cast<HWND>(_hWindow));
 
         // Global counting
         _sGlobalWindowsCount--;
@@ -419,6 +429,46 @@ namespace Infra
     auto Window::ClearWindowEventProcessFunction() -> void
     {
         _winEventProcess = nullptr;
+    }
+
+    // https://www.khronos.org/opengl/wiki/Creating_an_OpenGL_Context_(WGL)
+    auto Window::CreateOpenGLContext() -> void
+    {
+        HDC hDeviceHandle = reinterpret_cast<HDC>(_hDeviceHandle);
+
+        ::gladLoaderLoadGL();
+
+        PIXELFORMATDESCRIPTOR pfd =
+        {
+                sizeof(PIXELFORMATDESCRIPTOR),
+                1,
+                PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
+                PFD_TYPE_RGBA,        // The kind of framebuffer. RGBA or palette.
+                32,                   // Color depth of the framebuffer.
+                0, 0, 0, 0, 0, 0,
+                0,
+                0,
+                0,
+                0, 0, 0, 0,
+                24,                   // Number of bits for the depth buffer
+                8,                    // Number of bits for the stencil buffer
+                0,                    // Number of Aux buffers in the framebuffer.
+                PFD_MAIN_PLANE,
+                0,
+                0, 0, 0
+        };
+
+        int letWindowsChooseThisPixelFormat;
+        letWindowsChooseThisPixelFormat = ::ChoosePixelFormat(hDeviceHandle, &pfd);
+        ::SetPixelFormat(hDeviceHandle, letWindowsChooseThisPixelFormat, &pfd);
+
+        _hGLContext = ::wglCreateContext(hDeviceHandle);
+        ::wglMakeCurrent(hDeviceHandle, reinterpret_cast<HGLRC>(_hGLContext));
+    }
+
+    auto Window::SwapBuffer() -> void
+    {
+        ::SwapBuffers(reinterpret_cast<HDC>(_hDeviceHandle));
     }
 
 }

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
-add_executable(test-string main.cpp)
+set(TEST_NAME test-string)
 
-target_link_libraries(test-string PRIVATE ${CPP_HELPER_LIB_NAME})
+add_executable(${TEST_NAME} main.cpp)
+
+target_link_libraries(${TEST_NAME} PRIVATE ${CPP_HELPER_LIB_NAME})
