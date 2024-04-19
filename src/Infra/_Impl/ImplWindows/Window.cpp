@@ -188,6 +188,9 @@ namespace Infra
         if (!_hWindow)
             return;
 
+        // Get device context
+        _hDeviceHandle = ::GetDC(reinterpret_cast<HWND>(_hWindow));
+
         // Global counting
         _sGlobalWindowsCount++;
 
@@ -201,9 +204,14 @@ namespace Infra
         ::ReleaseCapture();
 
         // Release openGL
-        ::wglMakeCurrent(reinterpret_cast<HDC>(_hDeviceHandle), nullptr);
-        ::wglDeleteContext(reinterpret_cast<HGLRC>(_hGLContext));
-        ::ReleaseDC(reinterpret_cast<HWND>(_hWindow), reinterpret_cast<HDC>(_hDeviceHandle));
+        if (_hGLContext)
+        {
+            ::wglMakeCurrent(reinterpret_cast<HDC>(_hDeviceHandle), nullptr);
+            ::wglDeleteContext(reinterpret_cast<HGLRC>(_hGLContext));
+        }
+
+        if (_hDeviceHandle)
+            ::ReleaseDC(reinterpret_cast<HWND>(_hWindow), reinterpret_cast<HDC>(_hDeviceHandle));
 
         // Icon
         if (_hIcon != nullptr)
