@@ -215,7 +215,7 @@ namespace Helper
             std::filesystem::path path(pathStr);
             std::filesystem::path directory = std::filesystem::is_directory(path) ? path : path.parent_path();
 
-            if (std::filesystem::exists(directory))
+            if (!std::filesystem::exists(directory))
                 std::filesystem::create_directory(directory);
         }
 
