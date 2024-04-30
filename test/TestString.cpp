@@ -1,6 +1,6 @@
 #include <iostream>
-#include <Infra/String.hpp>
-#include <Infra/Windows/Console.hpp>
+#include "Infra/String.hpp"
+#include "Infra/Windows/Console.hpp"
 
 int main()
 {
@@ -15,9 +15,9 @@ int main()
 
     std::string str = "测试";
     std::cout << str << std::endl;
-    std::wstring wstr = Infra::String::StringToWideString(str).value();
+    std::wstring wstr = Infra::String::StringToWideString(str);
     std::wcout << wstr << std::endl;
-    std::string str2 = Infra::String::WideStringToString(wstr).value();
+    std::string str2 = Infra::String::WideStringToString(wstr);
     std::cout << str2 << std::endl;
 
     system("pause");
