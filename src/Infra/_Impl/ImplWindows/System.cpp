@@ -3,7 +3,7 @@
 
 #if PLATFORM_WINDOWS
 
-#include "../../String.h"
+#include "../../String.hpp"
 #include <vector>
 #include <Psapi.h>
 

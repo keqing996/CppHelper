@@ -1,5 +1,5 @@
-#include "../../String.h"
-#include "../../PlatformDefine.h"
+#include "../../String.hpp"
+#include "../../PlatformDefine.hpp"
 
 #if PLATFORM_WINDOWS
 #include <Windows.h>

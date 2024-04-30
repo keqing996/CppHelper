@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../PlatformDefine.h"
+#include "../PlatformDefine.hpp"
 
 #if PLATFORM_WINDOWS
 
-#include "../ResourcePtr.h"
+#include "../ResourcePtr.hpp"
 
 namespace Infra
 {

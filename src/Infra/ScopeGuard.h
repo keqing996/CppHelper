@@ -1,7 +1,7 @@
 #pragma once
 
 #include <functional>
-#include "NonCopyable.h"
+#include "NonCopyable.hpp"
 
 namespace Infra
 {

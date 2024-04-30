@@ -5,7 +5,7 @@
 
 #include <shobjidl.h>
 #include "../../Windows/FileDialog.h"
-#include "../../String.h"
+#include "../../String.hpp"
 #include "../../ScopeGuard.h"
 
 namespace Infra

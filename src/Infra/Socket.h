@@ -2,9 +2,9 @@
 
 #include <memory>
 
-#include "PlatformDefine.h"
-#include "SocketGeneral.h"
-#include "ResourcePtr.h"
+#include "PlatformDefine.hpp"
+#include "SocketGeneral.hpp"
+#include "ResourcePtr.hpp"
 
 namespace Infra::Socket
 {

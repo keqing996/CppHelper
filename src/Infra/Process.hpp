@@ -5,7 +5,7 @@
 #include <functional>
 #include <optional>
 
-#include "ResourcePtr.h"
+#include "ResourcePtr.hpp"
 
 namespace Infra
 {

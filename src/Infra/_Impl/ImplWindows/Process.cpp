@@ -1,10 +1,10 @@
-#include "../../Process.h"
-#include "../../PlatformDefine.h"
+#include "../../Process.hpp"
+#include "../../PlatformDefine.hpp"
 
 #if PLATFORM_WINDOWS
 
 #include "../../Windows/WindowsDefine.h"
-#include "../../String.h"
+#include "../../String.hpp"
 #include "ProcessHandle.h"
 #include "ThreadHandle.h"
 #include <Psapi.h>

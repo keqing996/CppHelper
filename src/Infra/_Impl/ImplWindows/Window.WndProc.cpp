@@ -4,8 +4,8 @@
 #if PLATFORM_WINDOWS
 
 #include "../../ScopeGuard.h"
-#include "../../String.h"
-#include "../../Logger.h"
+#include "../../String.hpp"
+#include "../../Logger.hpp"
 #include "../../Windows/WindowEvent.h"
 
 namespace Infra

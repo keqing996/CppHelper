@@ -1,5 +1,5 @@
 #include <iostream>
-#include <Infra/String.h>
+#include <Infra/String.hpp>
 #include <Infra/Windows/Console.h>
 
 int main()

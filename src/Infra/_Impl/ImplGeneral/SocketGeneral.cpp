@@ -1,4 +1,4 @@
-#include "../../SocketGeneral.h"
+#include "../../SocketGeneral.hpp"
 #include <cstring>
 
 namespace Infra::Socket

@@ -1,5 +1,5 @@
 #include "../../Socket.h"
-#include "../../PlatformDefine.h"
+#include "../../PlatformDefine.hpp"
 #include "../../Windows/WindowsDefine.h"
 
 #if PLATFORM_WINDOWS

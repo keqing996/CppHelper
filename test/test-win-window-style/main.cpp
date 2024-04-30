@@ -1,7 +1,7 @@
 
 
 #include <Infra/Windows//Window.h>
-#include <Infra/Timer.h>
+#include <Infra/Timer.hpp>
 
 void TestNormal()
 {
