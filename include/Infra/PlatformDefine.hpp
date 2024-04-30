@@ -53,7 +53,7 @@
 /* Cpp version
  * - std::format need gcc13
  */
-#ifdef _MSVC_LANG
+#if defined(_MSC_VER)
 #    if _MSVC_LANG >= 202002L
 #        define CPP_VERSION 20L
 #    elif _MSVC_LANG >= 201703L
@@ -63,9 +63,7 @@
 #    else
 #        define CPP_VERSION 11L
 #    endif
-#endif
-
-#ifdef __cplusplus
+#elif defined(__GNUC__) || defined(__clang__)
 #    if __cplusplus >= 202002L
 #        define CPP_VERSION 20L
 #    elif __cplusplus >= 201703L
