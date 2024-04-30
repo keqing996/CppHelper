@@ -3,7 +3,7 @@
 
 #if PLATFORM_WINDOWS
 
-#include "../../ScopeGuard.h"
+#include "../../ScopeGuard.hpp"
 #include "../../String.hpp"
 #include "../../Logger.hpp"
 #include "../../Windows/WindowEvent.h"

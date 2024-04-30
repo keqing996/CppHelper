@@ -5,7 +5,7 @@
 
 #pragma comment(lib, "opengl32.lib")
 
-#include "../../ScopeGuard.h"
+#include "../../ScopeGuard.hpp"
 #include "../../String.hpp"
 #include "../../Logger.hpp"
 

@@ -6,7 +6,7 @@
 #include <fstream>
 #include <filesystem>
 #include <sstream>
-#include "ScopeGuard.h"
+#include "ScopeGuard.hpp"
 
 namespace Infra
 {
