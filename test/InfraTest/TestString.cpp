@@ -1,6 +1,6 @@
 #include <iostream>
-#include "Infra/String.hpp"
-#include "Infra/Windows/Console.hpp"
+#include "../../include/Infra/String.hpp"
+#include "../../include/Infra/Windows/Console.hpp"
 
 int main()
 {
