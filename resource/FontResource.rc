@@ -1,0 +1,8 @@
+#include "FontResource.h"
+
+#ifdef EMBEDDED_TTF
+RES_TTF_REGULAR         RCDATA     "../../GeneralResource/ttf/MsyhJetbrainsMono.ttf"
+RES_TTF_BOLD            RCDATA     "../../GeneralResource/ttf/MsyhJetbrainsMono_Bold.ttf"
+RES_TTF_ITALIC          RCDATA     "../../GeneralResource/ttf/MsyhJetbrainsMono_Italic.ttf"
+RES_TTF_BOLD_ITALIC     RCDATA     "../../GeneralResource/ttf/MsyhJetbrainsMono_BoldItalic.ttf"
+#endif
