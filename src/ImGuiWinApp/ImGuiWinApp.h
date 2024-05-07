@@ -15,6 +15,14 @@ namespace Infra
     class ImGuiWinApp final : NonCopyable
     {
     public:
+        enum class TickStage
+        {
+            PreFrame,
+            OnFrame,
+            PostFrame,
+        };
+
+    public:
         ImGuiWinApp(int width, int height, const std::string& title, int style = (int)WindowStyle::Default);
         ~ImGuiWinApp();
 
@@ -22,14 +30,26 @@ namespace Infra
         bool IsCreateReady();
         void AppLoop();
         void EnableVSync(bool enable);
-        void SetViewUpdater(const std::function<void()>& updater);
+        void CloseWindow();
 
         // Font
         ImFont* CreateImGuiFont(void* fontData, int fontDataSize, int fontSize, bool transferDataOwnership = true);
-        ImFont* GetFontRegularNormal();
-        ImFont* GetFontRegularLarge();
-        ImFont* GetFontBoldNormal();
-        ImFont* GetFontBoldLarge();
+        ImFont* GetFontRegularNormal() const;
+        ImFont* GetFontRegularLarge() const;
+        ImFont* GetFontBoldNormal() const;
+        ImFont* GetFontBoldLarge() const;
+
+    public:
+        template<TickStage stage>
+        void SetTickFunction(const std::function<void(ImGuiWinApp&)>& tickFunction)
+        {
+            if constexpr (stage == TickStage::PreFrame)
+                _preFrameTick = tickFunction;
+            else if constexpr (stage == TickStage::OnFrame)
+                _onFrameTick = tickFunction;
+            else if constexpr (stage == TickStage::PostFrame)
+                _postFrameTick = tickFunction;
+        }
 
     private:
         bool D3d11SetUp();
@@ -53,7 +73,9 @@ namespace Infra
         bool _enableVSync = true;
 
         // Updater
-        std::function<void()> _viewUpdater = nullptr;
+        std::function<void(ImGuiWinApp&)> _preFrameTick = nullptr;
+        std::function<void(ImGuiWinApp&)> _onFrameTick = nullptr;
+        std::function<void(ImGuiWinApp&)> _postFrameTick = nullptr;
 
         // Font
         static constexpr int NORMAL_FONT_SIZE = 16;

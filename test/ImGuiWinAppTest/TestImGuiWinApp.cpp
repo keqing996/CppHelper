@@ -89,19 +89,19 @@ void UpdateCommandLine()
     ImGui::InputText("##terminal:input_text", commandLineBuffer.data(), commandLineBuffer.size());
 }
 
-void UpdateMainWindow()
+void UpdateMainWindow(Infra::ImGuiWinApp& winApp)
 {
     ImGuiIO& io = ImGui::GetIO();
 
-    //ImGui::PushFont(_pTopWindow->GetRender()->GetBoldFontLarge());
+    ImGui::PushFont(winApp.GetFontBoldLarge());
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-    //ImGui::PopFont();
+    ImGui::PopFont();
 
     UpdateMessageSubWindow();
     UpdateCommandLine();
 }
 
-void Update()
+void Update(Infra::ImGuiWinApp& winApp)
 {
     ImGuiWindowFlags window_flags = 0;
     window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -136,7 +136,7 @@ void Update()
 
     ImGui::Begin("MainWindow", nullptr, window_flags);
 
-    UpdateMainWindow();
+    UpdateMainWindow(winApp);
 
     ImGui::End();
 }
@@ -144,11 +144,10 @@ void Update()
 
 int main()
 {
-
     Infra::ImGuiWinApp app(800, 600, "TestApp");
-    app.SetViewUpdater(Update);
+    app.SetTickFunction<Infra::ImGuiWinApp::TickStage::OnFrame>(Update);
+    app.EnableVSync(false);
     app.AppLoop();
-
 
     return 0;
 }

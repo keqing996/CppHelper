@@ -150,7 +150,10 @@ namespace Infra
         ImGui::GetStyle().ScaleAllSizes(dpiScale);
 
         // Font
-        GetFontRegularNormal();
+        _pFontRegularNormal = CreateImGuiFont(JetBrainsMono_Regular.data(),JetBrainsMono_Regular.size(), NORMAL_FONT_SIZE, false);
+        _pFontRegularLarge = CreateImGuiFont(JetBrainsMono_Regular.data(),JetBrainsMono_Regular.size(), LARGE_FONT_SIZE, false);
+        _pFontBoldNormal = CreateImGuiFont(JetBrainsMono_Bold.data(),JetBrainsMono_Bold.size(), NORMAL_FONT_SIZE, false);
+        _pFontBoldLarge = CreateImGuiFont(JetBrainsMono_Bold.data(),JetBrainsMono_Bold.size(), LARGE_FONT_SIZE, false);
 
         return true;
     }
@@ -183,17 +186,25 @@ namespace Infra
             if (shouldWindowClose)
                 break;
 
+            // Pre frame tick
+            if (_preFrameTick)
+                _preFrameTick(*this);
+
             // ImGui new frame setup
             ImGui_ImplDX11_NewFrame();
             ImGui_ImplWin32_NewFrame();
             ImGui::NewFrame();
 
-            // Update logic
-            if (_viewUpdater != nullptr)
-                _viewUpdater();
+            // On frame tick
+            if (_onFrameTick)
+                _onFrameTick(*this);
 
             // ImGui render
             ImGui::Render();
+
+            // On frame tick
+            if (_postFrameTick)
+                _postFrameTick(*this);
 
             // Clear color
             static const float CLEAR_COLOR[4] = {0.75f, 0.75f, 0.75f, 1.00f };
@@ -216,40 +227,23 @@ namespace Infra
         _enableVSync = enable;
     }
 
-    void ImGuiWinApp::SetViewUpdater(const std::function<void()>& updater)
+    ImFont* ImGuiWinApp::GetFontRegularNormal() const
     {
-        _viewUpdater = updater;
-    }
-
-    ImFont* ImGuiWinApp::GetFontRegularNormal()
-    {
-        if (!_pFontRegularNormal)
-            _pFontRegularNormal = CreateImGuiFont(JetBrainsMono_Regular.data(),JetBrainsMono_Regular.size(), NORMAL_FONT_SIZE, false);
-
         return _pFontRegularNormal;
     }
 
-    ImFont* ImGuiWinApp::GetFontRegularLarge()
+    ImFont* ImGuiWinApp::GetFontRegularLarge() const
     {
-        if (!_pFontRegularLarge)
-            _pFontRegularLarge = CreateImGuiFont(JetBrainsMono_Regular.data(),JetBrainsMono_Regular.size(), LARGE_FONT_SIZE, false);
-
         return _pFontRegularLarge;
     }
 
-    ImFont* ImGuiWinApp::GetFontBoldNormal()
+    ImFont* ImGuiWinApp::GetFontBoldNormal() const
     {
-        if (!_pFontBoldNormal)
-            _pFontBoldNormal = CreateImGuiFont(JetBrainsMono_Bold.data(),JetBrainsMono_Bold.size(), NORMAL_FONT_SIZE, false);
-
         return _pFontBoldNormal;
     }
 
-    ImFont* ImGuiWinApp::GetFontBoldLarge()
+    ImFont* ImGuiWinApp::GetFontBoldLarge() const
     {
-        if (!_pFontBoldLarge)
-            _pFontBoldLarge = CreateImGuiFont(JetBrainsMono_Bold.data(),JetBrainsMono_Bold.size(), LARGE_FONT_SIZE, false);
-
         return _pFontBoldLarge;
     }
 
@@ -270,5 +264,10 @@ namespace Infra
                 _pSharedImGuiFonts->GetGlyphRangesChineseSimplifiedCommon());
     }
 
+    void ImGuiWinApp::CloseWindow()
+    {
+        HWND hWnd = (HWND)_window.GetSystemHandle();
+        ::PostMessageW(hWnd, WM_CLOSE, 0, 0);
+    }
 
 }
