@@ -3,6 +3,8 @@
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx11.h>
 #include "ImGuiWinApp.h"
+#include "Font/JetBrainsMono-Bold.h"
+#include "Font/JetBrainsMono-Regular.h"
 
 #pragma comment(lib, "d3d11.lib")
 
@@ -121,7 +123,11 @@ namespace Infra
     {
         IMGUI_CHECKVERSION();
 
-        ImGui::CreateContext();
+        // Prepare font atlas
+        _pSharedImGuiFonts = std::make_unique<ImFontAtlas>();
+
+        // ImGui context
+        ImGui::CreateContext(_pSharedImGuiFonts.get());
         ImGuiIO& io = ImGui::GetIO();
         (void)io;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
@@ -137,6 +143,14 @@ namespace Infra
         // Setup Platform/Renderer backends
         ImGui_ImplWin32_Init((HWND)_window.GetSystemHandle());
         ImGui_ImplDX11_Init(_pD3dDevice, _pD3dDeviceContext);
+
+        // Scale
+        HWND hWnd = (HWND)_window.GetSystemHandle();
+        float dpiScale = ImGui_ImplWin32_GetDpiScaleForHwnd(reinterpret_cast<HWND>(hWnd));
+        ImGui::GetStyle().ScaleAllSizes(dpiScale);
+
+        // Font
+        GetFontRegularNormal();
 
         return true;
     }
@@ -206,4 +220,55 @@ namespace Infra
     {
         _viewUpdater = updater;
     }
+
+    ImFont* ImGuiWinApp::GetFontRegularNormal()
+    {
+        if (!_pFontRegularNormal)
+            _pFontRegularNormal = CreateImGuiFont(JetBrainsMono_Regular.data(),JetBrainsMono_Regular.size(), NORMAL_FONT_SIZE, false);
+
+        return _pFontRegularNormal;
+    }
+
+    ImFont* ImGuiWinApp::GetFontRegularLarge()
+    {
+        if (!_pFontRegularLarge)
+            _pFontRegularLarge = CreateImGuiFont(JetBrainsMono_Regular.data(),JetBrainsMono_Regular.size(), LARGE_FONT_SIZE, false);
+
+        return _pFontRegularLarge;
+    }
+
+    ImFont* ImGuiWinApp::GetFontBoldNormal()
+    {
+        if (!_pFontBoldNormal)
+            _pFontBoldNormal = CreateImGuiFont(JetBrainsMono_Bold.data(),JetBrainsMono_Bold.size(), NORMAL_FONT_SIZE, false);
+
+        return _pFontBoldNormal;
+    }
+
+    ImFont* ImGuiWinApp::GetFontBoldLarge()
+    {
+        if (!_pFontBoldLarge)
+            _pFontBoldLarge = CreateImGuiFont(JetBrainsMono_Bold.data(),JetBrainsMono_Bold.size(), LARGE_FONT_SIZE, false);
+
+        return _pFontBoldLarge;
+    }
+
+    ImFont* ImGuiWinApp::CreateImGuiFont(void* fontData, int fontDataSize, int fontSize, bool transferDataOwnership)
+    {
+        HWND hWnd = (HWND)_window.GetSystemHandle();
+        float dpiScale = ImGui_ImplWin32_GetDpiScaleForHwnd(reinterpret_cast<HWND>(hWnd));
+
+        ImFontConfig tempConfig;
+        if (!transferDataOwnership)
+            tempConfig.FontDataOwnedByAtlas = false;
+
+        return _pSharedImGuiFonts->AddFontFromMemoryTTF(
+                fontData,
+                fontDataSize,
+                dpiScale * fontSize,
+                &tempConfig,
+                _pSharedImGuiFonts->GetGlyphRangesChineseSimplifiedCommon());
+    }
+
+
 }

@@ -1,10 +1,14 @@
 #pragma once
 
 #include <string>
+#include <memory>
 #include <functional>
 #include <d3d11.h>
 #include <Infra/NonCopyable.hpp>
 #include <NativeWinApp/Window.h>
+
+class ImFont;
+class ImFontAtlas;
 
 namespace Infra
 {
@@ -19,6 +23,13 @@ namespace Infra
         void AppLoop();
         void EnableVSync(bool enable);
         void SetViewUpdater(const std::function<void()>& updater);
+
+        // Font
+        ImFont* CreateImGuiFont(void* fontData, int fontDataSize, int fontSize, bool transferDataOwnership = true);
+        ImFont* GetFontRegularNormal();
+        ImFont* GetFontRegularLarge();
+        ImFont* GetFontBoldNormal();
+        ImFont* GetFontBoldLarge();
 
     private:
         bool D3d11SetUp();
@@ -38,10 +49,19 @@ namespace Infra
         IDXGISwapChain* _pSwapChain = nullptr;
         ID3D11RenderTargetView* _pMainRenderTargetView = nullptr;
 
-        // option
+        // Option
         bool _enableVSync = true;
 
         // Updater
         std::function<void()> _viewUpdater = nullptr;
+
+        // Font
+        static constexpr int NORMAL_FONT_SIZE = 16;
+        static constexpr int LARGE_FONT_SIZE = 20;
+        std::unique_ptr<ImFontAtlas> _pSharedImGuiFonts = nullptr;
+        ImFont* _pFontRegularNormal = nullptr;
+        ImFont* _pFontRegularLarge = nullptr;
+        ImFont* _pFontBoldNormal = nullptr;
+        ImFont* _pFontBoldLarge = nullptr;
     };
 }
