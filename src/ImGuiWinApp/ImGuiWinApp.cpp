@@ -172,18 +172,22 @@ namespace Infra
             // Win32 message loop
             _window.EventLoop();
 
-            bool shouldWindowClose = false;
+            bool breakAppLoop = false;
             while (_window.HasEvent())
             {
                 auto event = _window.PopEvent();
-                if (event.type == Infra::WindowEvent::Type::Close)
+
+                if (_onEventHandler)
                 {
-                    shouldWindowClose = true;
-                    break;
+                    bool handled = _onEventHandler(event, &breakAppLoop);
+                    if (handled)
+                        continue;
                 }
+
+                DefaultOnEventHandler(event, &breakAppLoop);
             }
 
-            if (shouldWindowClose)
+            if (breakAppLoop)
                 break;
 
             // Pre frame tick
@@ -268,6 +272,16 @@ namespace Infra
     {
         HWND hWnd = (HWND)_window.GetSystemHandle();
         ::PostMessageW(hWnd, WM_CLOSE, 0, 0);
+    }
+
+    void ImGuiWinApp::SetOnEventHandler(const std::function<bool(const WindowEvent&, bool*)>& handler)
+    {
+        _onEventHandler = handler;
+    }
+
+    void ImGuiWinApp::DefaultOnEventHandler(const WindowEvent& event, bool* breakAppLoop)
+    {
+        *breakAppLoop = event.type == Infra::WindowEvent::Type::Close;
     }
 
 }

@@ -28,6 +28,7 @@ namespace Infra
 
     public:
         bool IsCreateReady();
+        void SetOnEventHandler(const std::function<bool(const WindowEvent&, bool*)>& handler);
         void AppLoop();
         void EnableVSync(bool enable);
         void CloseWindow();
@@ -56,12 +57,14 @@ namespace Infra
         void D3d11Clear();
         bool ImGuiSetUp();
         void ImGuiClear();
+        void DefaultOnEventHandler(const WindowEvent& e, bool* breakAppLoop);
 
     private:
         bool _ready = false;
 
         // Window
         Window _window;
+        std::function<bool(const WindowEvent&, bool*)> _onEventHandler = nullptr;
 
         // D3d11
         ID3D11Device* _pD3dDevice = nullptr;
