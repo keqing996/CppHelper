@@ -168,7 +168,8 @@ namespace Infra
             ImGui::NewFrame();
 
             // Update logic
-
+            if (_viewUpdater != nullptr)
+                _viewUpdater();
 
             // ImGui render
             ImGui::Render();
@@ -192,5 +193,10 @@ namespace Infra
     void ImGuiWinApp::EnableVSync(bool enable)
     {
         _enableVSync = enable;
+    }
+
+    void ImGuiWinApp::SetViewUpdater(const std::function<void()>& updater)
+    {
+        _viewUpdater = updater;
     }
 }

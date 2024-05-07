@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <functional>
 #include <d3d11.h>
 #include <Infra/NonCopyable.hpp>
 #include <NativeWinApp/Window.h>
@@ -17,6 +18,7 @@ namespace Infra
         bool IsCreateReady();
         void AppLoop();
         void EnableVSync(bool enable);
+        void SetViewUpdater(const std::function<void()>& updater);
 
     private:
         bool D3d11SetUp();
@@ -40,6 +42,6 @@ namespace Infra
         bool _enableVSync = true;
 
         // Updater
-
+        std::function<void()> _viewUpdater = nullptr;
     };
 }
