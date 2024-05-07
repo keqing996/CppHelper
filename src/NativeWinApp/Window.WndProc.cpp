@@ -8,10 +8,14 @@ namespace Infra
 {
     void Window::WindowEventProcess(uint32_t message, void* wpara, void* lpara)
     {
-        WindowEventProcessInternal(message, wpara, lpara);
-
         if (_winEventProcess)
-            _winEventProcess(message, wpara, lpara);
+        {
+            bool handled = _winEventProcess(_hWindow, message, wpara, lpara);
+            if (handled)
+                return;
+        }
+
+        WindowEventProcessInternal(message, wpara, lpara);
     }
 
     void Window::WindowEventProcessInternal(uint32_t message, void* wpara, void* lpara)

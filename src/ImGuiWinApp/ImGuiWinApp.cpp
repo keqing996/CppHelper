@@ -1,8 +1,10 @@
-#include <Windows.h>
+#include <Infra/Windows/WindowsDefine.hpp>
 #include <imgui.h>
 #include "ImGuiWinApp.h"
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx11.h>
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 namespace Infra
 {
@@ -14,6 +16,11 @@ namespace Infra
             return;
 
         ImGuiSetUp();
+
+        _window.SetWindowEventProcessFunction([](void* hWnd, uint32_t msg, void* lParam, void* wParam)->bool
+            {
+                return ImGui_ImplWin32_WndProcHandler((HWND)hWnd, msg, (LPARAM)lParam, (WPARAM)wParam);
+            });
     }
 
     bool ImGuiWinApp::D3d11SetUp()

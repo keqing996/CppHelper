@@ -426,7 +426,7 @@ namespace Infra
         }
     }
 
-    auto Window::SetWindowEventProcessFunction(const std::function<void(uint32_t, void*, void*)>& f) -> void
+    auto Window::SetWindowEventProcessFunction(const std::function<bool(void*, uint32_t, void*, void*)>& f) -> void
     {
         _winEventProcess = f;
     }
