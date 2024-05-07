@@ -1,5 +1,5 @@
 
-include_directories(../../include/)
+include_directories(../../src/)
 
 # test
 add_executable(test_infra_socket ./TestSocket.cpp)

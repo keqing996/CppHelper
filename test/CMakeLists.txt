@@ -1,3 +1,4 @@
 
 add_subdirectory(InfraTest)
 add_subdirectory(NativeWinAppTest)
+add_subdirectory(ImGuiWinAppTest)
