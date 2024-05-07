@@ -27,7 +27,6 @@ namespace Infra
         ~ImGuiWinApp();
 
     public:
-        bool IsCreateReady();
         void SetOnEventHandler(const std::function<bool(const WindowEvent&, bool*)>& handler);
         void AppLoop();
         void EnableVSync(bool enable);
@@ -60,8 +59,6 @@ namespace Infra
         void DefaultOnEventHandler(const WindowEvent& e, bool* breakAppLoop);
 
     private:
-        bool _ready = false;
-
         // Window
         Window _window;
         std::function<bool(const WindowEvent&, bool*)> _onEventHandler = nullptr;

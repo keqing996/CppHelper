@@ -10,6 +10,11 @@
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+static bool ImGui_ImplWin32_WndProcHandler_Wrapper(void* hWnd, uint32_t msg, void* lParam, void* wParam)
+{
+    return ImGui_ImplWin32_WndProcHandler((HWND)hWnd, msg, (LPARAM)lParam, (WPARAM)wParam);
+}
+
 namespace Infra
 {
     ImGuiWinApp::ImGuiWinApp(int width, int height, const std::string& title, int style)
@@ -21,10 +26,7 @@ namespace Infra
 
         ImGuiSetUp();
 
-        _window.SetWindowEventProcessFunction([](void* hWnd, uint32_t msg, void* lParam, void* wParam)->bool
-            {
-                return ImGui_ImplWin32_WndProcHandler((HWND)hWnd, msg, (LPARAM)lParam, (WPARAM)wParam);
-            });
+        _window.SetWindowEventProcessFunction(ImGui_ImplWin32_WndProcHandler_Wrapper);
     }
 
     bool ImGuiWinApp::D3d11SetUp()
@@ -81,8 +83,6 @@ namespace Infra
 
     void ImGuiWinApp::D3d11Clear()
     {
-        _ready = false;
-
         if (_pMainRenderTargetView)
         {
             _pMainRenderTargetView->Release();
@@ -106,11 +106,6 @@ namespace Infra
             _pD3dDevice->Release();
             _pD3dDevice = nullptr;
         }
-    }
-
-    bool ImGuiWinApp::IsCreateReady()
-    {
-        return _ready;
     }
 
     ImGuiWinApp::~ImGuiWinApp()
