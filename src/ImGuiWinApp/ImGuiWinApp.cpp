@@ -127,7 +127,12 @@ namespace Infra
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
+        // Light style
         ImGui::StyleColorsLight();
+
+        // Disable imgui ini file
+        io.IniFilename = nullptr;
+        io.LogFilename = nullptr;
 
         // Setup Platform/Renderer backends
         ImGui_ImplWin32_Init((HWND)_window.GetSystemHandle());
