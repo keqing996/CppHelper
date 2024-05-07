@@ -140,4 +140,57 @@ namespace Infra
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
     }
+
+    void ImGuiWinApp::AppLoop()
+    {
+        while (true)
+        {
+            // Win32 message loop
+            _window.EventLoop();
+
+            bool shouldWindowClose = false;
+            while (_window.HasEvent())
+            {
+                auto event = _window.PopEvent();
+                if (event.type == Infra::WindowEvent::Type::Close)
+                {
+                    shouldWindowClose = true;
+                    break;
+                }
+            }
+
+            if (shouldWindowClose)
+                break;
+
+            // ImGui new frame setup
+            ImGui_ImplDX11_NewFrame();
+            ImGui_ImplWin32_NewFrame();
+            ImGui::NewFrame();
+
+            // Update logic
+
+
+            // ImGui render
+            ImGui::Render();
+
+            // Clear color
+            static const float CLEAR_COLOR[4] = {0.75f, 0.75f, 0.75f, 1.00f };
+            _pD3dDeviceContext->OMSetRenderTargets(1, &_pMainRenderTargetView, nullptr);
+            _pD3dDeviceContext->ClearRenderTargetView(_pMainRenderTargetView, CLEAR_COLOR);
+
+            // ImGui draw
+            ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+            // Swap back buffer
+            if (_enableVSync)
+                _pSwapChain->Present(1, 0);
+            else
+                _pSwapChain->Present(0, 0);
+        }
+    }
+
+    void ImGuiWinApp::EnableVSync(bool enable)
+    {
+        _enableVSync = enable;
+    }
 }

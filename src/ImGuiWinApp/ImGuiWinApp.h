@@ -7,14 +7,16 @@
 
 namespace Infra
 {
-    class ImGuiWinApp: NonCopyable
+    class ImGuiWinApp final : NonCopyable
     {
     public:
         ImGuiWinApp(int width, int height, const std::string& title, int style = (int)WindowStyle::Default);
-        virtual ~ImGuiWinApp();
+        ~ImGuiWinApp();
 
     public:
         bool IsCreateReady();
+        void AppLoop();
+        void EnableVSync(bool enable);
 
     private:
         bool D3d11SetUp();
@@ -33,5 +35,11 @@ namespace Infra
         ID3D11DeviceContext* _pD3dDeviceContext = nullptr;
         IDXGISwapChain* _pSwapChain = nullptr;
         ID3D11RenderTargetView* _pMainRenderTargetView = nullptr;
+
+        // option
+        bool _enableVSync = true;
+
+        // Updater
+
     };
 }
