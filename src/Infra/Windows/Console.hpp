@@ -4,6 +4,9 @@
 
 #if PLATFORM_WINDOWS
 
+#include <iostream>
+#include "WindowsDefine.hpp"
+
 namespace Infra
 {
     class Console
@@ -186,6 +189,28 @@ namespace Infra
             csbi.dwCursorPosition.Y = 0;
 
             ::SetConsoleCursorPosition(hConsole, csbi.dwCursorPosition);
+        }
+
+        static void ProgressBar(float progress, int barWidth = 70)
+        {
+            if (progress < 0)
+                progress = 0;
+            if (progress > 1)
+                progress = 1.0f;
+
+            std::cout << "[";
+            int pos = barWidth * progress;
+            for (int i = 0; i < barWidth; ++i)
+            {
+                if (i < pos)
+                    std::cout << "=";
+                else if (i == pos)
+                    std::cout << ">";
+                else
+                    std::cout << " ";
+            }
+            std::cout << "] " << progress * 100.0 << " %\r";
+            std::cout.flush();
         }
     };
 }
