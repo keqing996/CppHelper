@@ -17,8 +17,28 @@
 
 namespace Infra
 {
-    struct ProcessHandle;
-    struct ThreadHandle;
+    struct ProcessHandle
+    {
+        void* handle;
+    };
+
+    struct ThreadHandle
+    {
+        void* handle;
+    };
+
+    struct PipeHandle
+    {
+        void* handle;
+    };
+
+    struct ProcessInfo
+    {
+        ProcessHandle hProcess;
+        ThreadHandle hThread;
+        PipeHandle hPipeChildStdIn;
+        PipeHandle hPipeChildStdOut;
+    };
 
     class Process
     {
@@ -26,24 +46,18 @@ namespace Infra
         Process() = delete;
 
     public:
-        using FChildProcessStdOutReceived = void (*) (const char*, int);
-        using FChildProcessStdOutFinished = void (*) ();
-        using FGetChildProcessSendStdIn = void (*) (const std::function<int(const char*, int)>&);
-
-        struct ProcessCreateInfo
-        {
-            std::string commandLine;
-            FChildProcessStdOutReceived pChildProcessStdOutReceived;
-            FChildProcessStdOutFinished pChildProcessStdOutFinished;
-            FGetChildProcessSendStdIn pGetChildProcessSendStdIn;
-        };
-
         static auto GetCurrentProcessId() -> int32_t;
-        static auto GetProcessHandle(int32_t processId) -> ResPtr<ProcessHandle>;
-        static auto ReleaseProcessHandle(ResPtr<ProcessHandle>&& pProcess) -> void;
-        static auto GetProcessName(const ResPtr<ProcessHandle>& hProcess) -> std::string;
-        static auto CreateProcess(const std::string& commandLine, bool detach = false) -> std::optional<int>;
-        static auto CreateProcess(const ProcessCreateInfo& processCreateInfo) -> std::optional<int>;
+        static auto GetProcessHandle(int32_t processId) -> ProcessHandle;
+        static auto ReleaseProcessHandle(const ProcessHandle& pProcess) -> void;
+        static auto GetProcessName(const ProcessHandle& hProcess) -> std::string;
+
+        static auto CreateProcessAndWaitFinish(const std::string& commandLine) -> std::optional<int>;
+        static auto CreateProcessAndDetach(const std::string& commandLine) -> bool;
+        static auto CreateProcessWithPipe(const std::string& commandLine) -> std::optional<ProcessInfo>;
+        static auto WaitProcessFinish(const ProcessInfo& processInfo) -> int;
+        static auto SendDataToProcess(const ProcessInfo& processInfo, const char* buffer, int sendSize) -> std::optional<int>;
+        static auto ReadDataFromProcess(const ProcessInfo& processInfo, char* buffer, int bufferSize) -> std::optional<int>;
+        static auto DetachProcess(const ProcessInfo& processInfo) -> void;
 
     };
 
@@ -51,42 +65,34 @@ namespace Infra
 
 #if PLATFORM_WINDOWS
 
-    struct ProcessHandle
-    {
-        HANDLE handle;
-    };
-
     int32_t Process::GetCurrentProcessId()
     {
         return ::GetCurrentProcessId();
     }
 
-    ResPtr<ProcessHandle> Process::GetProcessHandle(int32_t processId)
+    ProcessHandle Process::GetProcessHandle(int32_t processId)
     {
-        ResPtr<ProcessHandle> pHandle(new ProcessHandle());
-        pHandle->handle = ::OpenProcess(PROCESS_ALL_ACCESS, TRUE, processId);
-        return pHandle;
+        ProcessHandle handle{};
+        handle.handle = ::OpenProcess(PROCESS_ALL_ACCESS, TRUE, processId);
+        return handle;
     }
 
-    void Process::ReleaseProcessHandle(ResPtr<ProcessHandle>&& pProcess)
+    void Process::ReleaseProcessHandle(const ProcessHandle& pProcess)
     {
-        if (pProcess == nullptr)
-            return;
-
-        ::CloseHandle(pProcess->handle);
+        ::CloseHandle(pProcess.handle);
     }
 
-    std::string Process::GetProcessName(const ResPtr<ProcessHandle>& hProcess)
+    std::string Process::GetProcessName(const ProcessHandle& hProcess)
     {
         wchar_t nameBuffer[256 + 1] = {};
-        const DWORD length = ::GetProcessImageFileNameW(hProcess->handle, nameBuffer, 256);
+        const DWORD length = ::GetProcessImageFileNameW(hProcess.handle, nameBuffer, 256);
         if (length == 0)
             return {};
 
         return String::WideStringToString(nameBuffer);
     }
 
-    std::optional<int> Process::CreateProcess(const std::string& commandLine, bool detach)
+    std::optional<int> Process::CreateProcessAndWaitFinish(const std::string& commandLine)
     {
         STARTUPINFOW si;
         ::ZeroMemory( &si, sizeof(si) );
@@ -114,67 +120,26 @@ namespace Infra
             return std::nullopt;
         }
 
-        if (!detach)
-        {
-            ::WaitForSingleObject(pi.hProcess, INFINITE);
+        ::WaitForSingleObject(pi.hProcess, INFINITE);
 
-            DWORD dwExitCode = 0;
-            ::GetExitCodeProcess(pi.hProcess, &dwExitCode);
+        DWORD dwExitCode = 0;
+        ::GetExitCodeProcess(pi.hProcess, &dwExitCode);
 
-            ::CloseHandle(pi.hProcess);
-            ::CloseHandle(pi.hThread);
-            return 0;
-        }
-        else
-        {
-            ::CloseHandle(pi.hProcess);
-            ::CloseHandle(pi.hThread);
-            return 0;
-        }
+        ::CloseHandle(pi.hProcess);
+        ::CloseHandle(pi.hThread);
+        return dwExitCode;
     }
 
-    std::optional<int> Process::CreateProcess(const ProcessCreateInfo& processCreateInfo)
+    bool Process::CreateProcessAndDetach(const std::string& commandLine)
     {
-        HANDLE hStdInPipeRead = nullptr;
-        HANDLE hStdInPipeWrite = nullptr;
-        HANDLE hStdOutPipeRead = nullptr;
-        HANDLE hStdOutPipeWrite = nullptr;
-
         STARTUPINFOW si;
-        ZeroMemory(&si, sizeof(STARTUPINFO));
+        ::ZeroMemory( &si, sizeof(si) );
+        si.cb = sizeof(si);
 
         PROCESS_INFORMATION pi;
-        ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
+        ::ZeroMemory( &pi, sizeof(pi) );
 
-        SECURITY_ATTRIBUTES sa;
-        ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
-
-        // Create one-way pipe for child process STDOUT
-        if (!::CreatePipe(&hStdOutPipeRead, &hStdOutPipeWrite, &sa, 0))
-            return std::nullopt;
-
-        // Ensure read handle to pipe for STDOUT is not inherited
-        if (!::SetHandleInformation(hStdOutPipeRead, HANDLE_FLAG_INHERIT, 0))
-            return std::nullopt;
-
-        // Create one-way pipe for child process STDIN
-        if (!::CreatePipe(&hStdInPipeRead, &hStdInPipeWrite, &sa, 0))
-            return std::nullopt;
-
-        // Ensure write handle to pipe for STDIN is not inherited
-        if (!::SetHandleInformation(hStdInPipeWrite, HANDLE_FLAG_INHERIT, 0))
-            return std::nullopt;
-
-        si.cb = sizeof(STARTUPINFO);
-        si.hStdError = hStdOutPipeWrite;
-        si.hStdOutput = hStdOutPipeWrite;
-        si.hStdInput = hStdInPipeRead;
-        si.dwFlags |= STARTF_USESTDHANDLES;
-        sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-        sa.lpSecurityDescriptor = nullptr;
-        sa.bInheritHandle = true;   // Pipe handles are inherited
-
-        std::wstring commandLineW = String::StringToWideString(processCreateInfo.commandLine);
+        std::wstring commandLineW = String::StringToWideString(commandLine);
 
         // Start the child process.
         if(!::CreateProcessW(
@@ -190,6 +155,70 @@ namespace Infra
                 &pi )                                       // Pointer to PROCESS_INFORMATION structure
                 )
         {
+            return false;
+        }
+
+        ::CloseHandle(pi.hProcess);
+        ::CloseHandle(pi.hThread);
+
+        return true;
+    }
+
+    std::optional<ProcessInfo>  Process::CreateProcessWithPipe(const std::string& commandLine)
+    {
+        HANDLE hChildStdIn_Read = nullptr;
+        HANDLE hChildStdIn_Write = nullptr;
+        HANDLE hChildStdOut_Read = nullptr;
+        HANDLE hChildStdOut_Write = nullptr;
+
+        SECURITY_ATTRIBUTES securityAttributes;
+        ZeroMemory(&securityAttributes, sizeof(SECURITY_ATTRIBUTES));
+        securityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+        securityAttributes.bInheritHandle = true;   // Set the bInheritHandle flag so pipe handles are inherited.
+        securityAttributes.lpSecurityDescriptor = nullptr;
+
+        // Create one-way pipe for child process STDOUT
+        if (!::CreatePipe(&hChildStdOut_Read, &hChildStdOut_Write, &securityAttributes, 0))
+            return std::nullopt;
+
+        // Ensure read handle to pipe for STDOUT is not inherited
+        if (!::SetHandleInformation(hChildStdOut_Read, HANDLE_FLAG_INHERIT, 0))
+            return std::nullopt;
+
+        // Create one-way pipe for child process STDIN
+        if (!::CreatePipe(&hChildStdIn_Read, &hChildStdIn_Write, &securityAttributes, 0))
+            return std::nullopt;
+
+        // Ensure write handle to pipe for STDIN is not inherited
+        if (!::SetHandleInformation(hChildStdIn_Write, HANDLE_FLAG_INHERIT, 0))
+            return std::nullopt;
+
+        STARTUPINFOW startupInfo;
+        ZeroMemory(&startupInfo, sizeof(STARTUPINFO));
+        startupInfo.cb = sizeof(STARTUPINFO);
+        startupInfo.hStdError = hChildStdOut_Write;
+        startupInfo.hStdOutput = hChildStdOut_Write;
+        startupInfo.hStdInput = hChildStdIn_Read;
+        startupInfo.dwFlags |= STARTF_USESTDHANDLES;
+
+        PROCESS_INFORMATION processInfo;
+        ZeroMemory(&processInfo, sizeof(PROCESS_INFORMATION));
+
+        std::wstring commandLineW = String::StringToWideString(commandLine);
+
+        // Start the child process.
+        if(!::CreateProcessW(
+                nullptr,
+                const_cast<LPWSTR>(commandLineW.c_str()),
+                nullptr,
+                nullptr,
+                TRUE,
+                0,
+                nullptr,
+                nullptr,
+                &startupInfo,
+                &processInfo ))
+        {
             return std::nullopt;
         }
 
@@ -204,8 +233,8 @@ namespace Infra
         // ║                  ║                ║                  ║
         // ╚══════════════════╝                ╚══════════════════╝
 
-        ::CloseHandle(hStdInPipeRead);
-        ::CloseHandle(hStdOutPipeWrite);
+        ::CloseHandle(hChildStdIn_Read);
+        ::CloseHandle(hChildStdOut_Write);
 
         // After close child process's handles:
         // ╔══════════════════╗                ╔══════════════════╗
@@ -218,65 +247,68 @@ namespace Infra
         // ║                  ║                ║                  ║
         // ╚══════════════════╝                ╚══════════════════╝
 
-        // Set stdin to outside
-        if (processCreateInfo.pGetChildProcessSendStdIn != nullptr)
-        {
-            std::function<bool(const char*, int)> fSendStdIn = [&hStdInPipeWrite](const char* pData, int size) -> int
-            {
-                if (pData == nullptr)
-                    return -1;
+        ProcessInfo result;
+        result.hProcess.handle = processInfo.hProcess;
+        result.hThread.handle = processInfo.hThread;
+        result.hPipeChildStdOut.handle = hChildStdOut_Read;
+        result.hPipeChildStdIn.handle = hChildStdIn_Write;
+        return result;
+    }
 
-                DWORD realWrite = 0;
-                const bool success = ::WriteFile(hStdInPipeWrite, pData, size, &realWrite, nullptr);
-                if (!success)
-                    return -1;
-
-                return realWrite;
-            };
-
-            processCreateInfo.pGetChildProcessSendStdIn(fSendStdIn);
-        }
-
-        // Keep fetching stdout
-        if (processCreateInfo.pChildProcessStdOutReceived != nullptr
-            || processCreateInfo.pChildProcessStdOutFinished != nullptr)
-        {
-            const auto pBuffer = new char[1024];
-
-            while (true)
-            {
-                DWORD readBytes = 0;
-                const bool state = ::ReadFile(hStdOutPipeRead, pBuffer, 1024, &readBytes, nullptr);
-                if (!state || readBytes == 0)
-                {
-                    if (processCreateInfo.pChildProcessStdOutFinished != nullptr)
-                        processCreateInfo.pChildProcessStdOutFinished();
-
-                    break;
-                }
-
-                if (processCreateInfo.pChildProcessStdOutReceived != nullptr)
-                    processCreateInfo.pChildProcessStdOutReceived(pBuffer, readBytes);
-            }
-
-            delete[] pBuffer;
-        }
-
+    int Process::WaitProcessFinish(const ProcessInfo& processInfo)
+    {
         // Close left handle
-        ::CloseHandle(hStdInPipeWrite);
-        ::CloseHandle(hStdOutPipeRead);
+        ::CloseHandle(processInfo.hPipeChildStdIn.handle);
+        ::CloseHandle(processInfo.hPipeChildStdOut.handle);
 
         // Wait until child process exits
-        ::WaitForSingleObject(pi.hProcess, INFINITE);
+        ::WaitForSingleObject(processInfo.hProcess.handle, INFINITE);
 
         DWORD dwExitCode = 0;
-        ::GetExitCodeProcess(pi.hProcess, &dwExitCode);
+        ::GetExitCodeProcess(processInfo.hProcess.handle, &dwExitCode);
 
         // Close process and thread handles
-        ::CloseHandle(pi.hProcess);
-        ::CloseHandle(pi.hThread);
+        ::CloseHandle(processInfo.hProcess.handle);
+        ::CloseHandle(processInfo.hThread.handle);
 
         return dwExitCode;
+    }
+
+    std::optional<int> Process::SendDataToProcess(const ProcessInfo& processInfo, const char* buffer, int sendSize)
+    {
+        if (buffer == nullptr)
+            return std::nullopt;
+
+        DWORD realWrite = 0;
+        const bool success = ::WriteFile(processInfo.hPipeChildStdIn.handle, buffer, sendSize, &realWrite, nullptr);
+        if (!success)
+            return std::nullopt;
+
+        return realWrite;
+    }
+
+    std::optional<int> Process::ReadDataFromProcess(const ProcessInfo& processInfo, char* buffer, int bufferSize)
+    {
+        if (buffer == nullptr)
+            return std::nullopt;
+
+        DWORD readBytes = 0;
+        const bool state = ::ReadFile(processInfo.hPipeChildStdOut.handle, buffer, bufferSize, &readBytes, nullptr);
+        if (!state || readBytes == 0)
+            return std::nullopt;
+
+        return readBytes;
+    }
+
+    void Process::DetachProcess(const ProcessInfo& processInfo)
+    {
+        // Close left handle
+        ::CloseHandle(processInfo.hPipeChildStdIn.handle);
+        ::CloseHandle(processInfo.hPipeChildStdOut.handle);
+
+        // Close process and thread handles
+        ::CloseHandle(processInfo.hProcess.handle);
+        ::CloseHandle(processInfo.hThread.handle);
     }
 
 #endif
