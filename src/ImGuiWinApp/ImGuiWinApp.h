@@ -31,6 +31,7 @@ namespace Infra
         void AppLoop();
         void EnableVSync(bool enable);
         void CloseWindow();
+        Window& GetNativeWindow();
 
         // Font
         ImFont* CreateImGuiFont(void* fontData, int fontDataSize, int fontSize, bool transferDataOwnership = true);

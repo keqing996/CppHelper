@@ -279,4 +279,9 @@ namespace Infra
         *breakAppLoop = event.type == Infra::WindowEvent::Type::Close;
     }
 
+    Window& ImGuiWinApp::GetNativeWindow()
+    {
+        return _window;
+    }
+
 }

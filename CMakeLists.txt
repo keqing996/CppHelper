@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.22)
 
 project (CppInfra)
 set (CMAKE_CXX_STANDARD 20)
-set (LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/)
+
+# Set output path
+# set (LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/)
 
 # Names
 set (TARGET_LIB_NATIVE_WIN_APP  cpp_native_win_app)
