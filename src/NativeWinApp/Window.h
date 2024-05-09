@@ -50,6 +50,7 @@ namespace Infra
         auto GetSystemHandle() -> void*;
 
         auto SetIcon(unsigned int width, unsigned int height, const std::byte* pixels) -> void;
+        auto SetIcon(int iconResId) -> void;
 
         auto SetTitle(const std::string& title) -> void;
 

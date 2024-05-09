@@ -300,6 +300,30 @@ namespace Infra
         }
     }
 
+    auto Window::SetIcon(int iconResId) -> void
+    {
+        if (_hIcon != nullptr)
+            ::DestroyIcon(reinterpret_cast<HICON>(_hIcon));
+
+        _hIcon = nullptr;
+
+        _hIcon = ::LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCE(iconResId));
+        if (_hIcon != nullptr)
+        {
+            ::SendMessageW(
+                    reinterpret_cast<HWND>(_hWindow),
+                    WM_SETICON,
+                    ICON_BIG,
+                    reinterpret_cast<LPARAM>(_hIcon));
+
+            ::SendMessageW(
+                    reinterpret_cast<HWND>(_hWindow),
+                    WM_SETICON,
+                    ICON_SMALL,
+                    reinterpret_cast<LPARAM>(_hIcon));
+        }
+    }
+
     auto Window::SetWindowVisible(bool show) -> void
     {
         ::ShowWindow(reinterpret_cast<HWND>(_hWindow), show ? SW_SHOW : SW_HIDE);
