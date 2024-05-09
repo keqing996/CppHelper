@@ -263,7 +263,7 @@ namespace Infra
                 _pSharedImGuiFonts->GetGlyphRangesChineseSimplifiedCommon());
     }
 
-    ImFont* ImGuiWinApp::CreateImGuiFont(const std::string& ttfPath, int fontSize, bool transferDataOwnership)
+    ImFont* ImGuiWinApp::CreateImGuiFont(const std::string& ttfPath, int fontSize)
     {
         HWND hWnd = (HWND)_window.GetSystemHandle();
         float dpiScale = ImGui_ImplWin32_GetDpiScaleForHwnd(reinterpret_cast<HWND>(hWnd));
