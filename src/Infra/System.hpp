@@ -11,8 +11,8 @@
 #if PLATFORM_WINDOWS
 #   include "Windows/WindowsDefine.hpp"
 #   include <Psapi.h>
-#   undef GetEnviromentVariable
-#   undef SetEnviromentVariable
+#   undef GetEnvironmentVariable
+#   undef SetEnvironmentVariable
 #   undef GetCurrentDirectory
 #   undef SetCurrentDirectory
 #endif
@@ -29,8 +29,8 @@ namespace Infra
         static auto GetCurrentUserName() -> std::string;
 
     public:
-        static auto GetEnviromentVariable(const std::string& keyName) -> std::string;
-        static auto SetEnviromentVariable(const std::string& keyName, const std::string& value) -> void;
+        static auto GetEnvironmentVariable(const std::string& keyName) -> std::string;
+        static auto SetEnvironmentVariable(const std::string& keyName, const std::string& value) -> void;
 
     public:
         static auto GetHomeDirectory() -> std::string;
@@ -46,9 +46,11 @@ namespace Infra
 
     std::string System::GetMachineName()
     {
-        DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
+        const DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
         wchar_t nameBuffer[bufferSize];
-        if (!::GetComputerNameW(nameBuffer, &bufferSize))
+
+        DWORD count = bufferSize;
+        if (!::GetComputerNameW(nameBuffer, &count))
             return {};
 
         return String::WideStringToString(nameBuffer);
@@ -56,15 +58,17 @@ namespace Infra
 
     std::string System::GetCurrentUserName()
     {
-        DWORD bufferSize = 256 + 1;
+        const DWORD bufferSize = 256 + 1;
         wchar_t nameBuffer[bufferSize];
-        if (!::GetUserNameW(nameBuffer, &bufferSize))
+
+        DWORD count = bufferSize;
+        if (!::GetUserNameW(nameBuffer, &count))
             return {};
 
         return String::WideStringToString(nameBuffer);
     }
 
-    std::string System::GetEnviromentVariable(const std::string& keyName)
+    std::string System::GetEnvironmentVariable(const std::string& keyName)
     {
         std::vector<wchar_t> buffer(1024, 0);
         const std::wstring keyNameW = String::StringToWideString(keyName);
@@ -82,7 +86,7 @@ namespace Infra
         return String::WideStringToString(buffer.data());
     }
 
-    void System::SetEnviromentVariable(const std::string& keyName, const std::string& value)
+    void System::SetEnvironmentVariable(const std::string& keyName, const std::string& value)
     {
         const std::wstring keyNameW = String::StringToWideString(keyName);
 
@@ -99,10 +103,10 @@ namespace Infra
 
     std::string System::GetHomeDirectory()
     {
-        std::string result = GetEnviromentVariable("USERPROFILE");
+        std::string result = GetEnvironmentVariable("USERPROFILE");
 
         if (result.empty())
-            result = GetEnviromentVariable("HOMEDRIVE") + GetEnviromentVariable("HOMEPATH");
+            result = GetEnvironmentVariable("HOMEDRIVE") + GetEnvironmentVariable("HOMEPATH");
 
         return result;
     }
