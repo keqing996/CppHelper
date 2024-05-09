@@ -34,7 +34,10 @@ namespace Infra
         Window& GetNativeWindow();
 
         // Font
+        int GetNormalFontSize();
+        int GetLargeFontSize();
         ImFont* CreateImGuiFont(void* fontData, int fontDataSize, int fontSize, bool transferDataOwnership = true);
+        ImFont* CreateImGuiFont(const std::string& ttfPath, int fontSize, bool transferDataOwnership = true);
         ImFont* GetFontRegularNormal() const;
         ImFont* GetFontRegularLarge() const;
         ImFont* GetFontBoldNormal() const;

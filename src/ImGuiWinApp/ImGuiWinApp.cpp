@@ -263,6 +263,18 @@ namespace Infra
                 _pSharedImGuiFonts->GetGlyphRangesChineseSimplifiedCommon());
     }
 
+    ImFont* ImGuiWinApp::CreateImGuiFont(const std::string& ttfPath, int fontSize, bool transferDataOwnership)
+    {
+        HWND hWnd = (HWND)_window.GetSystemHandle();
+        float dpiScale = ImGui_ImplWin32_GetDpiScaleForHwnd(reinterpret_cast<HWND>(hWnd));
+
+        return _pSharedImGuiFonts->AddFontFromFileTTF(
+                ttfPath.c_str(),
+                dpiScale * fontSize,
+                nullptr,
+                _pSharedImGuiFonts->GetGlyphRangesChineseSimplifiedCommon());
+    }
+
     void ImGuiWinApp::CloseWindow()
     {
         HWND hWnd = (HWND)_window.GetSystemHandle();
@@ -282,6 +294,16 @@ namespace Infra
     Window& ImGuiWinApp::GetNativeWindow()
     {
         return _window;
+    }
+
+    int ImGuiWinApp::GetNormalFontSize()
+    {
+        return NORMAL_FONT_SIZE;
+    }
+
+    int ImGuiWinApp::GetLargeFontSize()
+    {
+        return LARGE_FONT_SIZE;
     }
 
 }
