@@ -29,7 +29,7 @@ namespace Infra
             std::wstring suffix;
         };
 
-        FileTypeFilterW GetWideStringVersion(const FileTypeFilter& fileFilter)
+        static FileTypeFilterW GetWideStringVersion(const FileTypeFilter& fileFilter)
         {
             return FileTypeFilterW {
                     String::StringToWideString(fileFilter.name),
