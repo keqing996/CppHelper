@@ -21,49 +21,49 @@ namespace Infra::Socket
     }
 
     // Create and destroy
-    inline auto Create(AddressFamily family, Protocol protocol) -> ResPtr<SocketHandle>
+    inline auto Create(AddressFamily family, Protocol protocol) -> std::optional<SocketHandle>
     {
         return Impl::Create(family, protocol);
     }
 
-    inline auto Destroy(ResPtr<SocketHandle>&& pSocket) -> void
+    inline auto Destroy(const SocketHandle& socketHandle) -> void
     {
-        Impl::Destroy(std::move(pSocket));
+        Impl::Destroy(socketHandle);
     }
 
     // Client
     template<AddressFamily addrFamily>
-    inline auto Connect(const ResPtr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint, int timeOutInMs = -1) -> bool
+    inline auto Connect(const SocketHandle& socketHandle, const EndPoint<addrFamily>& endpoint, int timeOutInMs = -1) -> bool
     {
-        return Impl::Connect(pSocket, endpoint, timeOutInMs);
+        return Impl::Connect(socketHandle, endpoint, timeOutInMs);
     }
 
     // Server
     template<AddressFamily addrFamily>
-    inline auto Bind(const ResPtr<SocketHandle>& pSocket, const EndPoint<addrFamily>& endpoint) -> bool
+    inline auto Bind(const SocketHandle& socketHandle, const EndPoint<addrFamily>& endpoint) -> bool
     {
-        return Impl::Bind(pSocket, endpoint);
+        return Impl::Bind(socketHandle, endpoint);
     }
 
-    inline auto Listen(const ResPtr<SocketHandle>& pSocket) -> bool
+    inline auto Listen(const SocketHandle& socketHandle) -> bool
     {
-        return Impl::Listen(pSocket);
+        return Impl::Listen(socketHandle);
     }
 
-    inline auto Accept(const ResPtr<SocketHandle>& pSocket, int timeOutInMs = -1) -> std::optional<ResPtr<SocketHandle>>
+    inline auto Accept(const SocketHandle& socketHandle, int timeOutInMs = -1) -> std::optional<SocketHandle>
     {
-        return Impl::Accept(pSocket, timeOutInMs);
+        return Impl::Accept(socketHandle, timeOutInMs);
     }
 
     // Send & Recv
-    inline auto Send(const ResPtr<SocketHandle>& pSocket, const char* pDataBuffer, int bufferSize) -> bool
+    inline auto Send(const SocketHandle& socketHandle, const char* pDataBuffer, int bufferSize) -> bool
     {
-        return Impl::Send(pSocket, pDataBuffer, bufferSize);
+        return Impl::Send(socketHandle, pDataBuffer, bufferSize);
     }
 
-    inline auto Receive(const ResPtr<SocketHandle>& pSocket, char* pDataBuffer, int bufferSize, int timeOutInMs = -1) -> std::optional<int>
+    inline auto Receive(const SocketHandle& socketHandle, char* pDataBuffer, int bufferSize, int timeOutInMs = -1) -> std::optional<int>
     {
-        return Impl::Receive(pSocket, pDataBuffer, bufferSize, timeOutInMs);
+        return Impl::Receive(socketHandle, pDataBuffer, bufferSize, timeOutInMs);
     }
     
 }
