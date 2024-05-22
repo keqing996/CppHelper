@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <string>
-#include <mutex>
 
 #ifdef __clang__
 #   if __clang_major__ >= 17
@@ -36,17 +35,11 @@ namespace Infra
         Logger() = delete;
 
     public:
-        static void SetFilterLevel(Level targetLevel)
-        {
-            _filterLevel = targetLevel;
-        }
+        static void SetFilterLevel(Level targetLevel);
 
-        static Level GetCurrentFilterLevel()
-        {
-            return _filterLevel;
-        }
+        static Level GetCurrentFilterLevel();
 
-        template <Logger::Level level>
+        template <Level level>
         static void AddLogCall(LogCallBack pFunc)
         {
             if constexpr (level == Level::Info)
@@ -58,76 +51,16 @@ namespace Infra
         }
 
         // Log info
-        static void LogInfo(const std::string& message)
-        {
-            if (static_cast<int>(_filterLevel) > static_cast<int>(Logger::Level::Info))
-                return;
-
-            LogInfo(message.c_str());
-        }
-
-        static void LogInfo(const char* message)
-        {
-            if (static_cast<int>(_filterLevel) > static_cast<int>(Logger::Level::Info))
-                return;
-
-            std::lock_guard<std::mutex> guard(_mutex);
-            {
-                for (const auto p: _logInfoCallVec)
-                {
-                    if (p != nullptr)
-                        p(message);
-                }
-            }
-        }
+        static void LogInfo(const std::string& message);
+        static void LogInfo(const char* message);
 
         // Log warn
-        static void LogWarn(const std::string& message)
-        {
-            if (static_cast<int>(_filterLevel) > static_cast<int>(Logger::Level::Warning))
-                return;
-
-            LogWarn(message.c_str());
-        }
-
-        static void LogWarn(const char* message)
-        {
-            if (static_cast<int>(_filterLevel) > static_cast<int>(Logger::Level::Warning))
-                return;
-
-            std::lock_guard<std::mutex> guard(_mutex);
-            {
-                for (const auto p: _logWarnCallVec)
-                {
-                    if (p != nullptr)
-                        p(message);
-                }
-            }
-        }
+        static void LogWarn(const std::string& message);
+        static void LogWarn(const char* message);
 
         // Log error
-        static void LogError(const std::string& message)
-        {
-            if (static_cast<int>(_filterLevel) > static_cast<int>(Logger::Level::Error))
-                return;
-
-            LogError(message.c_str());
-        }
-
-        static void LogError(const char* message)
-        {
-            if (static_cast<int>(_filterLevel) > static_cast<int>(Logger::Level::Error))
-                return;
-
-            std::lock_guard<std::mutex> guard(_mutex);
-            {
-                for (const auto p: _logErrorCallVec)
-                {
-                    if (p != nullptr)
-                        p(message);
-                }
-            }
-        }
+        static void LogError(const std::string& message);
+        static void LogError(const char* message);
 
 #if HAVE_STD_FORMAT
         template <class... Types>
@@ -150,7 +83,6 @@ namespace Infra
 #endif
 
     private:
-        inline static std::mutex _mutex = {};
         inline static Level _filterLevel = Level::Info;
 
         inline static std::vector<LogCallBack> _logInfoCallVec {};

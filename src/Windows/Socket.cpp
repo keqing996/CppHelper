@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Infra/Windows/WindowsDefine.hpp"
 
 #if PLATFORM_WINDOWS
