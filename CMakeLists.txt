@@ -4,24 +4,14 @@ project (CppInfra)
 set (CMAKE_CXX_STANDARD 20)
 
 # Set output path
-# set (LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/)
-
-# Names
-set (TARGET_LIB_NATIVE_WIN_APP  cpp_native_win_app)
-set (TARGET_LIB_IMGUI_WIN_APP   imgui_frame_work)
+set (LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/${CMAKE_CXX_COMPILER_ID}/${CMAKE_BUILD_TYPE}/)
 
 # Source files
-file (GLOB_RECURSE NATIVE_WIN_WINDOW_SRC ./src/NativeWinApp/*.cpp)
-file (GLOB_RECURSE IMGUI_WIN_WINDOW_SRC ./src/ImGuiWinApp/*.cpp)
+file (GLOB_RECURSE INFRA_SRC ./src/*.cpp)
 
 # Native win app
-add_library                 (${TARGET_LIB_NATIVE_WIN_APP} STATIC ${NATIVE_WIN_WINDOW_SRC})
-target_include_directories  (${TARGET_LIB_NATIVE_WIN_APP} PUBLIC ./src/)
-
-# ImGui win app
-add_library                 (${TARGET_LIB_IMGUI_WIN_APP} STATIC ${NATIVE_WIN_WINDOW_SRC} ${IMGUI_WIN_WINDOW_SRC})
-target_include_directories  (${TARGET_LIB_IMGUI_WIN_APP} PUBLIC ./src/)
-target_include_directories  (${TARGET_LIB_IMGUI_WIN_APP} PUBLIC ./src/ImGuiWinApp/ImGui/)
+add_library                 (infra STATIC ${INFRA_SRC})
+target_include_directories  (infra PUBLIC ./include/)
 
 # Test code
 option (ENABLE_INFRA_TEST OFF)
