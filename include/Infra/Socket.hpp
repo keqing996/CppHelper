@@ -66,7 +66,7 @@ namespace Infra
 
         struct SocketHandle
         {
-            void* handle;
+            void* handle = nullptr;
             AddressFamily family;
             Protocol protocol;
         };
