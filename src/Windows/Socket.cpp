@@ -6,9 +6,11 @@
 #include <thread>
 #include <optional>
 #include "Infra/Socket.hpp"
+#include "Infra/String.hpp"
 
 #include <WinSock2.h>
 #include <ws2ipdef.h>
+#include <ws2tcpip.h>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -105,6 +107,18 @@ namespace Infra
     uint16_t Socket::EndPoint<Socket::AddressFamily::IpV4>::GetPort() const
     {
         return _port;
+    }
+
+    std::optional<Socket::EndPoint<Socket::AddressFamily::IpV4>> Socket::EndPoint<Socket::AddressFamily::IpV4>::TryCreate(const std::string& ip, uint16_t port)
+    {
+        std::wstring ipInWide = String::StringToWideString(ip);
+
+        uint32_t ip;
+        int result = ::InetPtonW(AF_INET, ipInWide.c_str(), &ip);
+        if (SUCCEEDED(result))
+            return EndPoint(ip, port);
+
+        return std::nullopt;
     }
 
     Socket::EndPoint<

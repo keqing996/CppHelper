@@ -36,6 +36,9 @@ namespace Infra
             uint32_t GetIp() const;
             uint16_t GetPort() const;
 
+        public:
+            static std::optional<EndPoint> TryCreate(const std::string& ip, uint16_t port);
+
         private:
             uint32_t _ip;
             uint16_t _port;
