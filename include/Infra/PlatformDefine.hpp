@@ -9,6 +9,26 @@
 #   define PLATFORM_WINDOWS 0
 #endif
 
+#if defined(__clang__)
+#    define COMPILER_CLANG 1
+#    define COMPILER_MSVC 0
+#    define COMPILER_GCC 0
+#else
+#    if defined(_MSC_VER)
+#        define COMPILER_CLANG 0
+#        define COMPILER_MSVC 1
+#        define COMPILER_GCC 0
+#    elif defined(__GNUC__)
+#        define COMPILER_CLANG 0
+#        define COMPILER_MSVC 0
+#        define COMPILER_GCC 1
+#    else
+#        define COMPILER_CLANG 0
+#        define COMPILER_MSVC 0
+#        define COMPILER_GCC 0
+#    endif
+#endif
+
 #ifdef __APPLE__
 #   ifdef TARGET_OS_IPHONE
 #       define PLATFORM_IOS 1
