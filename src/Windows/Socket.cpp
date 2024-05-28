@@ -109,9 +109,9 @@ namespace Infra
         return _port;
     }
 
-    std::optional<Socket::EndPoint<Socket::AddressFamily::IpV4>> Socket::EndPoint<Socket::AddressFamily::IpV4>::TryCreate(const std::string& ip, uint16_t port)
+    std::optional<Socket::EndPoint<Socket::AddressFamily::IpV4>> Socket::EndPoint<Socket::AddressFamily::IpV4>::TryCreate(const std::string& ipStr, uint16_t port)
     {
-        std::wstring ipInWide = String::StringToWideString(ip);
+        std::wstring ipInWide = String::StringToWideString(ipStr);
 
         uint32_t ip;
         int result = ::InetPtonW(AF_INET, ipInWide.c_str(), &ip);
