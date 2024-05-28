@@ -21,8 +21,9 @@ namespace Infra
         return addr == ::VirtualAlloc(addr, size, MEM_COMMIT, PAGE_READWRITE);
     }
 
-    void Memory::VirtualRelease(void* addr)
+    void Memory::VirtualRelease(void* addr, size_t size)
     {
+        (void)size; // size used in POSIX
         ::VirtualFree(addr, 0, MEM_RELEASE);
     }
 

@@ -1,5 +1,3 @@
-#include <linux/limits.h>
-
 #include "Infra/PlatformDefine.hpp"
 
 #if PLATFORM_SUPPORT_POSIX
@@ -8,6 +6,7 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <cerrno>
+#include <linux/limits.h>
 
 #include "Infra/System.hpp"
 
