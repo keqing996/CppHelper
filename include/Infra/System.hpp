@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <cstdint>
 
 namespace Infra
 {
@@ -23,5 +24,8 @@ namespace Infra
         static auto SetCurrentDirectory(const std::string& path) -> bool;
         static auto GetExecutableDirectory() -> std::string;
         static auto GetTempDirectory() -> std::string;
+
+    public:
+        static auto GetLastError() -> uint32_t;
     };
 }

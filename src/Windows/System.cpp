@@ -108,6 +108,11 @@ namespace Infra
         ::GetTempPathW(MAX_PATH, buffer);
         return String::WideStringToString(buffer);
     }
+
+    uint32_t System::GetLastError()
+    {
+        return ::GetLastError();
+    }
 }
 
 #endif
