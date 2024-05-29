@@ -17,29 +17,29 @@
 static bool gSocketEnvironmentInit = false;
 static std::mutex gInitLock{};
 
-static int GetWsaAddressFamily(Infra::Socket::AddressFamily family)
+static int GetWsaAddressFamily(Infra::AddressFamily family)
 {
     switch (family)
     {
-        case Infra::Socket::AddressFamily::IpV4:
+        case Infra::AddressFamily::IpV4:
             return AF_INET;
-        case Infra::Socket::AddressFamily::IpV6:
+        case Infra::AddressFamily::IpV6:
             return AF_INET6;
     }
 }
 
-static std::pair<int, int> GetWsaProtocol(Infra::Socket::Protocol protocol)
+static std::pair<int, int> GetWsaProtocol(Infra::Protocol protocol)
 {
     switch (protocol)
     {
-        case Infra::Socket::Protocol::Tcp:
+        case Infra::Protocol::Tcp:
             return std::make_pair(IPPROTO_TCP, SOCK_STREAM);
-        case Infra::Socket::Protocol::Udp:
+        case Infra::Protocol::Udp:
             return std::make_pair(IPPROTO_UDP, SOCK_DGRAM);
     }
 }
 
-static SOCKADDR_IN GetSocketAddrIpV4(const Infra::Socket::SocketHandle& socketHandle, const Infra::Socket::EndPointV4& endpoint)
+static SOCKADDR_IN GetSocketAddrIpV4(const Infra::SocketHandle& socketHandle, const Infra::EndPointV4& endpoint)
 {
     SOCKADDR_IN serverAddr{};
     serverAddr.sin_family = GetWsaAddressFamily(socketHandle.family);
@@ -48,18 +48,17 @@ static SOCKADDR_IN GetSocketAddrIpV4(const Infra::Socket::SocketHandle& socketHa
     return serverAddr;
 }
 
-static SOCKADDR_IN6 GetSocketAddrIpV6(const Infra::Socket::SocketHandle& socketHandle,
-                                      const Infra::Socket::EndPointV6& endpoint)
+static SOCKADDR_IN6 GetSocketAddrIpV6(const Infra::SocketHandle& socketHandle, const Infra::EndPointV6& endpoint)
 {
     SOCKADDR_IN6 serverAddr{};
     serverAddr.sin6_family = GetWsaAddressFamily(socketHandle.family);
-    ::memcpy(&serverAddr.sin6_addr, endpoint.GetIp().data(), Infra::Socket::EndPointV6::ADDR_SIZE);
+    ::memcpy(&serverAddr.sin6_addr, endpoint.GetIp().data(), Infra::EndPointV6::ADDR_SIZE);
     serverAddr.sin6_scope_id = endpoint.GetScopeId();
     serverAddr.sin6_port = endpoint.GetPort();
     return serverAddr;
 }
 
-static bool ConnectInternal(const Infra::Socket::SocketHandle& socketHandle, const SOCKADDR* pAddr, int size, int timeOutInMs)
+static bool ConnectInternal(const Infra::SocketHandle& socketHandle, const SOCKADDR* pAddr, int size, int timeOutInMs)
 {
     SOCKET socket = reinterpret_cast<SOCKET>(socketHandle.handle);
     const auto connectResult = ::connect(socket, pAddr, size);
@@ -94,56 +93,6 @@ static bool ConnectInternal(const Infra::Socket::SocketHandle& socketHandle, con
 
 namespace Infra
 {
-    Socket::EndPoint<Socket::AddressFamily::IpV4>::EndPoint(uint32_t ip, uint16_t port): _ip(ip)
-        , _port(port)
-    {
-    }
-
-    uint32_t Socket::EndPoint<Socket::AddressFamily::IpV4>::GetIp() const
-    {
-        return _ip;
-    }
-
-    uint16_t Socket::EndPoint<Socket::AddressFamily::IpV4>::GetPort() const
-    {
-        return _port;
-    }
-
-    std::optional<Socket::EndPoint<Socket::AddressFamily::IpV4>> Socket::EndPoint<Socket::AddressFamily::IpV4>::TryCreate(const std::string& ipStr, uint16_t port)
-    {
-        std::wstring ipInWide = String::StringToWideString(ipStr);
-
-        uint32_t ip;
-        int result = ::InetPtonW(AF_INET, ipInWide.c_str(), &ip);
-        if (SUCCEEDED(result))
-            return EndPoint(ip, port);
-
-        return std::nullopt;
-    }
-
-    Socket::EndPoint<
-        Socket::AddressFamily::IpV6>::EndPoint(const uint8_t* array, uint16_t port, uint32_t scopeId): _port(port)
-        , _scopeId(scopeId)
-    {
-        ::memcpy(_ip.data(), array, ADDR_SIZE);
-    }
-
-    const std::array<uint8_t, Socket::EndPoint<Socket::AddressFamily::IpV6>::ADDR_SIZE>& Socket::EndPoint<Socket::
-        AddressFamily::IpV6>::GetIp() const
-    {
-        return _ip;
-    }
-
-    uint16_t Socket::EndPoint<Socket::AddressFamily::IpV6>::GetPort() const
-    {
-        return _port;
-    }
-
-    uint32_t Socket::EndPoint<Socket::AddressFamily::IpV6>::GetScopeId() const
-    {
-        return _scopeId;
-    }
-
     auto Socket::IsInitialized() -> bool
     {
         return gSocketEnvironmentInit;
@@ -178,7 +127,19 @@ namespace Infra
         }
     }
 
-    auto Socket::Create(AddressFamily family, Protocol protocol) -> std::optional<SocketHandle>
+    auto CreateEndpoint(const std::string& ipStr, uint16_t port) -> std::optional<EndPoint<AddressFamily::IpV4>>
+    {
+        std::wstring ipInWide = String::StringToWideString(ipStr);
+
+        uint32_t ip;
+        int result = ::InetPtonW(AF_INET, ipInWide.c_str(), &ip);
+        if (SUCCEEDED(result))
+            return EndPoint<AddressFamily::IpV4>(ip, port);
+
+        return std::nullopt;
+    }
+
+    auto Socket::CreateSocket(AddressFamily family, Protocol protocol) -> std::optional<SocketHandle>
     {
         const int wsaAddrFamily = GetWsaAddressFamily(family);
         const auto [wsaProtocol, wsaSocketType] = GetWsaProtocol(protocol);
@@ -199,16 +160,16 @@ namespace Infra
         return SocketHandle{ reinterpret_cast<void*>(socket), family, protocol };
     }
 
-    auto Socket::Destroy(const SocketHandle& socketHandle) -> void
+    auto Socket::DestroySocket(const SocketHandle& socketHandle) -> void
     {
         SOCKET socket = reinterpret_cast<SOCKET>(socketHandle.handle);
         ::closesocket(socket);
     }
 
-    template<Socket::AddressFamily addrFamily>
+    template<AddressFamily addrFamily>
     auto Socket::Connect(const SocketHandle& socketHandle, const EndPoint<addrFamily>& endpoint, int timeOutInMs) -> bool
     {
-        if constexpr (addrFamily == AddressFamily::IpV4)
+        if constexpr (addrFamily == AddressFamily::IpV6)
         {
             if (socketHandle.family != AddressFamily::IpV4)
                 return false;
@@ -231,7 +192,7 @@ namespace Infra
         }
     }
 
-    template<Socket::AddressFamily addrFamily>
+    template<AddressFamily addrFamily>
     auto Socket::Bind(const SocketHandle& socketHandle, const EndPoint<addrFamily>& endpoint) -> bool
     {
         SOCKET socket = reinterpret_cast<SOCKET>(socketHandle.handle);
