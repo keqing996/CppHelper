@@ -19,7 +19,39 @@
 
 namespace Infra
 {
+    namespace Detail
+    {
+        static int GetAddressFamily(Infra::AddressFamily family)
+        {
+            switch (family)
+            {
+                case Infra::AddressFamily::IpV4:
+                    return AF_INET;
+                case Infra::AddressFamily::IpV6:
+                    return AF_INET6;
+            }
 
+            return AF_INET;
+        }
+
+        static int GetProtocol(Infra::Protocol protocol)
+        {
+            switch (protocol)
+            {
+                case Infra::Protocol::Tcp:
+                    return SOCK_STREAM;
+                case Infra::Protocol::Udp:
+                    return SOCK_DGRAM;
+            }
+
+            return SOCK_STREAM;
+        }
+
+        static bool ConnectInternal(const Infra::SocketHandle& socketHandle, const sockaddr* pAddr, int size, int timeOutInMs)
+        {
+
+        }
+    }
 
     auto Socket::IsInitialized() -> bool
     {
@@ -50,12 +82,18 @@ namespace Infra
 
     auto Socket::CreateSocket(AddressFamily family, Protocol protocol) -> std::optional<SocketHandle>
     {
+        int af = Detail::GetAddressFamily(family);
+        int po = Detail::GetProtocol(protocol);
+        int rt = ::socket(af, po, 0);
+        if (rt < 0)
+            return std::nullopt;
 
+        return SocketHandle{ reinterpret_cast<void*>(rt), family, protocol };
     }
 
     auto Socket::DestroySocket(const SocketHandle& socketHandle) -> void
     {
-
+        ::close(reinterpret_cast<int>(socketHandle.handle));
     }
 }
 
