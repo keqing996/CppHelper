@@ -1,7 +1,8 @@
-#include "Infra/Windows/WindowsDefine.hpp"
+#include "Infra/PlatformDefine.hpp"
 
 #if PLATFORM_WINDOWS
 
+#include "Infra/Windows/WindowsDefine.hpp"
 #include "Infra/Process.hpp"
 #include "Infra/String.hpp"
 #include <functional>
