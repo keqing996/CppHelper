@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <functional>
 
 namespace Infra
 {
@@ -12,6 +13,27 @@ namespace Infra
         CommandLine() = default;
 
     private:
+        template<typename T>
+        static T Convert(const std::string& str)
+        {
+            if constexpr (std::is_same_v<T, std::string>)           return str;
+            if constexpr (std::is_same_v<T, int>)                   return std::stoi(str);
+            if constexpr (std::is_same_v<T, float>)                 return std::stof(str);
+            if constexpr (std::is_same_v<T, double>)                return std::stod(str);
+            if constexpr (std::is_same_v<T, long>)                  return std::stol(str);
+            if constexpr (std::is_same_v<T, unsigned long>)         return std::stoul(str);
+            if constexpr (std::is_same_v<T, long long>)             return std::stoll(str);
+            if constexpr (std::is_same_v<T, unsigned long long>)    return std::stoull(str);
+            if constexpr (std::is_same_v<T, long double>)           return std::stold(str);
+
+            T result;
+            std::istringstream strStream(str);
+            if (!(strStream >> result && strStream.eof()))
+                throw std::bad_cast();
+
+            return result;
+        }
+
         class Option
         {
         public:
@@ -52,6 +74,7 @@ namespace Infra
             char _shortName;
             std::string _desc;
             bool _settle;
+
         };
 
         class OptionNoValue: Option
@@ -75,7 +98,6 @@ namespace Infra
             }
         };
 
-        template<typename T>
         class OptionSingleValue : Option
         {
         public:
@@ -84,7 +106,7 @@ namespace Infra
             {
             }
 
-            OptionSingleValue(const std::string& name, char shortName, const std::string& desc, T defaultValue)
+            OptionSingleValue(const std::string& name, char shortName, const std::string& desc, const std::string& defaultValue)
                 : Option(name, shortName, desc)
                 , _value(defaultValue)
             {
@@ -98,20 +120,24 @@ namespace Infra
 
             void SetValue(const std::string& str)
             {
-                std::istringstream ss(str);
-                if (!(ss >> _value && ss.eof()))
-                    throw std::bad_cast();
-
+                _value = str;
                 _settle = true;
             }
 
+            template<typename T>
+            const T& GetValue(const std::function<T(const std::string&)>& converter)
+            {
+                return converter(_value);
+            }
+
+            template<typename T>
             const T& GetValue()
             {
-                return _value;
+                return Convert<T>(_value);
             }
 
         private:
-            T _value;
+            std::string _value;
         };
 
         class OptionMultiValue : Option
@@ -138,11 +164,14 @@ namespace Infra
                 return _values.size();
             }
 
+            const std::vector<std::string>& GetValue() const
+            {
+                return _values;
+            }
+
         private:
             std::vector<std::string> _values;
         };
-
-
 
     public:
         void AddOption(const std::string& fullName, char shortName, const std::string& desc);
