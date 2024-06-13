@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <sstream>
+#include <vector>
 
 namespace Infra
 {
@@ -17,6 +19,7 @@ namespace Infra
                 : _fullName(name)
                 , _shortName(shortName)
                 , _desc(desc)
+                , _settle(false)
             {
             }
 
@@ -31,19 +34,24 @@ namespace Infra
                 return _shortName;
             }
 
-            const std::string GetDesc()
+            const std::string& GetDesc()
             {
                 return _desc;
             }
 
+            bool Settle() const
+            {
+                return _settle;
+            }
+
         public:
             virtual bool HasValue() = 0;
-            virtual bool Settle() = 0;
 
-        private:
+        protected:
             std::string _fullName;
             char _shortName;
             std::string _desc;
+            bool _settle;
         };
 
         class OptionNoValue: Option
@@ -51,7 +59,6 @@ namespace Infra
         public:
             OptionNoValue(const std::string& name, char shortName, const std::string& desc)
                 : Option(name, shortName, desc)
-                , _settle(false)
             {
             }
 
@@ -66,27 +73,76 @@ namespace Infra
                 _settle = true;
                 return true;
             }
-
-            bool Settle() override
-            {
-                return _settle;
-            }
-
-        private:
-            bool _settle;
         };
 
         template<typename T>
-        class OptionWithValue : Option
+        class OptionSingleValue : Option
         {
         public:
+            OptionSingleValue(const std::string& name, char shortName, const std::string& desc)
+                : Option(name, shortName, desc)
+            {
+            }
 
+            OptionSingleValue(const std::string& name, char shortName, const std::string& desc, T defaultValue)
+                : Option(name, shortName, desc)
+                , _value(defaultValue)
+            {
+            }
 
         public:
+            bool HasValue() override
+            {
+                return true;
+            }
+
+            void SetValue(const std::string& str)
+            {
+                std::istringstream ss(str);
+                if (!(ss >> _value && ss.eof()))
+                    throw std::bad_cast();
+
+                _settle = true;
+            }
+
+            const T& GetValue()
+            {
+                return _value;
+            }
 
         private:
-
+            T _value;
         };
+
+        class OptionMultiValue : Option
+        {
+        public:
+            OptionMultiValue(const std::string& name, char shortName, const std::string& desc)
+                : Option(name, shortName, desc)
+            {
+            }
+
+        public:
+            bool HasValue() override
+            {
+                return true;
+            }
+
+            void AddValue(const std::string& str)
+            {
+                _values.push_back(str);
+            }
+
+            size_t ValueCount() const
+            {
+                return _values.size();
+            }
+
+        private:
+            std::vector<std::string> _values;
+        };
+
+
 
     public:
         void AddOption(const std::string& fullName, char shortName, const std::string& desc);
