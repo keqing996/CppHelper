@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <functional>
+#include <unordered_map>
 
 namespace Infra
 {
@@ -11,6 +12,12 @@ namespace Infra
     {
     public:
         CommandLine() = default;
+
+        ~CommandLine()
+        {
+            for (auto& [key, pOption]: _optionMap)
+                delete pOption;
+        }
 
     private:
         template<typename T>
@@ -33,6 +40,13 @@ namespace Infra
 
             return result;
         }
+
+        enum class OptionType
+        {
+            NoValue,
+            SingleValue,
+            MultiValue
+        };
 
         class Option
         {
@@ -68,6 +82,7 @@ namespace Infra
 
         public:
             virtual bool HasValue() = 0;
+            virtual OptionType Type() = 0;
 
         protected:
             std::string _fullName;
@@ -77,7 +92,7 @@ namespace Infra
 
         };
 
-        class OptionNoValue: Option
+        class OptionNoValue: public Option
         {
         public:
             OptionNoValue(const std::string& name, char shortName, const std::string& desc)
@@ -91,6 +106,11 @@ namespace Infra
                 return false;
             }
 
+            OptionType Type() override
+            {
+                return OptionType::NoValue;
+            }
+
             bool Set()
             {
                 _settle = true;
@@ -98,7 +118,7 @@ namespace Infra
             }
         };
 
-        class OptionSingleValue : Option
+        class OptionSingleValue : public Option
         {
         public:
             OptionSingleValue(const std::string& name, char shortName, const std::string& desc)
@@ -116,6 +136,11 @@ namespace Infra
             bool HasValue() override
             {
                 return true;
+            }
+
+            OptionType Type() override
+            {
+                return OptionType::SingleValue;
             }
 
             void SetValue(const std::string& str)
@@ -140,7 +165,7 @@ namespace Infra
             std::string _value;
         };
 
-        class OptionMultiValue : Option
+        class OptionMultiValue : public Option
         {
         public:
             OptionMultiValue(const std::string& name, char shortName, const std::string& desc)
@@ -154,9 +179,15 @@ namespace Infra
                 return true;
             }
 
+            OptionType Type() override
+            {
+                return OptionType::MultiValue;
+            }
+
             void AddValue(const std::string& str)
             {
                 _values.push_back(str);
+                _settle = true;
             }
 
             size_t ValueCount() const
@@ -164,9 +195,21 @@ namespace Infra
                 return _values.size();
             }
 
-            const std::vector<std::string>& GetValue() const
+            const std::vector<std::string>& GetValuesStringRaw() const
             {
                 return _values;
+            }
+
+            template<typename T>
+            T GetValueAt(int index)
+            {
+                return Convert<T>(_values[index]);
+            }
+
+            template<typename T>
+            T GetValueAt(int index, const std::function<T(const std::string&)>& converter)
+            {
+                return converter(_values[index]);
             }
 
         private:
@@ -174,12 +217,27 @@ namespace Infra
         };
 
     public:
-        void AddOption(const std::string& fullName, char shortName, const std::string& desc);
-
-        template<typename T>
+        template<OptionType type>
         void AddOption(const std::string& fullName, char shortName, const std::string& desc)
+        {
+            Option* pOption = nullptr;
+
+            if constexpr (type == OptionType::NoValue)
+                pOption = new OptionNoValue(fullName, shortName, desc);
+            else if constexpr (type == OptionType::SingleValue)
+                pOption = new OptionSingleValue(fullName, shortName, desc);
+            else if constexpr (type == OptionType::MultiValue)
+                pOption = new OptionMultiValue(fullName, shortName, desc);
+
+            _optionMap[fullName] = pOption;
+        }
+
+        void AddOption(const std::string& fullName, char shortName, const std::string& desc, const std::string& defaultValue)
+        {
+            _optionMap[fullName] = new OptionSingleValue(fullName, shortName, desc, defaultValue);
+        }
 
     private:
-
+        std::unordered_map<std::string, Option*> _optionMap;
     };
 }
