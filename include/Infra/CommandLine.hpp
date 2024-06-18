@@ -15,32 +15,11 @@ namespace Infra
 
         ~CommandLine()
         {
-            for (auto& [key, pOption]: _optionMap)
+            for (auto& pOption: _allOptions)
                 delete pOption;
         }
 
-    private:
-        template<typename T>
-        static T Convert(const std::string& str)
-        {
-            if constexpr (std::is_same_v<T, std::string>)           return str;
-            if constexpr (std::is_same_v<T, int>)                   return std::stoi(str);
-            if constexpr (std::is_same_v<T, float>)                 return std::stof(str);
-            if constexpr (std::is_same_v<T, double>)                return std::stod(str);
-            if constexpr (std::is_same_v<T, long>)                  return std::stol(str);
-            if constexpr (std::is_same_v<T, unsigned long>)         return std::stoul(str);
-            if constexpr (std::is_same_v<T, long long>)             return std::stoll(str);
-            if constexpr (std::is_same_v<T, unsigned long long>)    return std::stoull(str);
-            if constexpr (std::is_same_v<T, long double>)           return std::stold(str);
-
-            T result;
-            std::istringstream strStream(str);
-            if (!(strStream >> result && strStream.eof()))
-                throw std::bad_cast();
-
-            return result;
-        }
-
+    public:
         enum class OptionType
         {
             NoValue,
@@ -216,6 +195,28 @@ namespace Infra
             std::vector<std::string> _values;
         };
 
+    private:
+        template<typename T>
+        static T Convert(const std::string& str)
+        {
+            if constexpr (std::is_same_v<T, std::string>)           return str;
+            if constexpr (std::is_same_v<T, int>)                   return std::stoi(str);
+            if constexpr (std::is_same_v<T, float>)                 return std::stof(str);
+            if constexpr (std::is_same_v<T, double>)                return std::stod(str);
+            if constexpr (std::is_same_v<T, long>)                  return std::stol(str);
+            if constexpr (std::is_same_v<T, unsigned long>)         return std::stoul(str);
+            if constexpr (std::is_same_v<T, long long>)             return std::stoll(str);
+            if constexpr (std::is_same_v<T, unsigned long long>)    return std::stoull(str);
+            if constexpr (std::is_same_v<T, long double>)           return std::stold(str);
+
+            T result;
+            std::istringstream strStream(str);
+            if (!(strStream >> result && strStream.eof()))
+                throw std::bad_cast();
+
+            return result;
+        }
+
     public:
         template<OptionType type>
         void AddOption(const std::string& fullName, char shortName, const std::string& desc)
@@ -229,15 +230,31 @@ namespace Infra
             else if constexpr (type == OptionType::MultiValue)
                 pOption = new OptionMultiValue(fullName, shortName, desc);
 
-            _optionMap[fullName] = pOption;
+            _allOptions.push_back(pOption);
+            _fullNameOptionMap[fullName] = pOption;
+            _shortNameOptionMap[shortName] = pOption;
         }
 
         void AddOption(const std::string& fullName, char shortName, const std::string& desc, const std::string& defaultValue)
         {
-            _optionMap[fullName] = new OptionSingleValue(fullName, shortName, desc, defaultValue);
+            Option* pOption = new OptionSingleValue(fullName, shortName, desc, defaultValue);
+            _allOptions.push_back(pOption);
+            _fullNameOptionMap[fullName] = pOption;
+            _shortNameOptionMap[shortName] = pOption;
+        }
+
+        void Parse(int argc, char** argv)
+        {
+            int index = 1;
+            while (index < argc)
+            {
+                std::string str(argv[index]);
+            }
         }
 
     private:
-        std::unordered_map<std::string, Option*> _optionMap;
+        std::vector<Option*> _allOptions;
+        std::unordered_map<std::string, Option*> _fullNameOptionMap;
+        std::unordered_map<char, Option*> _shortNameOptionMap;
     };
 }
