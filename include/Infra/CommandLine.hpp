@@ -257,7 +257,39 @@ namespace Infra
 
             auto ProcessOption = [&](Option* pOption) -> void
             {
+                switch (pOption->Type())
+                {
+                    case OptionType::NoValue:
+                    {
+                        auto* pNoValueOption = dynamic_cast<OptionNoValue*>(pOption);
+                        pNoValueOption->Set();
+                        break;
+                    }
+                    case OptionType::SingleValue:
+                    {
+                        auto* pSingleValueOption = dynamic_cast<OptionSingleValue*>(pOption);
+                        if (index + 1 < argc)
+                        {
+                            pSingleValueOption->SetValue(argv[index + 1]);
+                            index++;
+                        }
+                        break;
+                    }
+                    case OptionType::MultiValue:
+                    {
+                        auto* pMultiValueOption = dynamic_cast<OptionMultiValue*>(pOption);
+                        while (index + 1 < argc)
+                        {
+                            std::string next(argv[index + 1]);
+                            if (GetFullName(next) || GetShortName(next))
+                                break;
 
+                            pMultiValueOption->AddValue(next);
+                            index++;
+                        }
+                        break;
+                    }
+                }
             };
 
             auto TryProcessFullName = [&](const std::string& str) -> bool
