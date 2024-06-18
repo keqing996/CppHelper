@@ -1,10 +1,12 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <functional>
 #include <unordered_map>
+#include <optional>
 
 namespace Infra
 {
@@ -218,6 +220,11 @@ namespace Infra
         }
 
     public:
+        void AbortWhenErrorInput(bool doAbort)
+        {
+            _abortWhenErrorInput = doAbort;
+        }
+
         template<OptionType type>
         void AddOption(const std::string& fullName, char shortName, const std::string& desc)
         {
@@ -245,15 +252,99 @@ namespace Infra
 
         void Parse(int argc, char** argv)
         {
+            _invalidInputRecord.clear();
             int index = 1;
-            while (index < argc)
+
+            auto ProcessOption = [&](Option* pOption) -> void
+            {
+
+            };
+
+            auto TryProcessFullName = [&](const std::string& str) -> bool
+            {
+                const auto fullName = GetFullName(str);
+                if (!fullName)
+                    return false;
+
+                const auto& key = *fullName;
+                if (const auto itr = _fullNameOptionMap.find(key); itr == _fullNameOptionMap.end())
+                {
+                    if (_abortWhenErrorInput)
+                    {
+                        std::cout << "Invalid option: " << key << std::endl;
+                        std::abort();
+                    }
+
+                    _invalidInputRecord.push_back(str);
+                }
+                else
+                {
+                    ProcessOption(itr->second);
+                }
+
+                return true;
+            };
+
+            auto TryProcessShortName = [&](const std::string& str) -> bool
+            {
+                const auto fullName = GetShortName(str);
+                if (!fullName)
+                    return false;
+
+                const auto key = *fullName;
+                if (const auto itr = _shortNameOptionMap.find(key); itr == _shortNameOptionMap.end())
+                {
+                    if (_abortWhenErrorInput)
+                    {
+                        std::cout << "Invalid option: " << key << std::endl;
+                        std::abort();
+                    }
+
+                    _invalidInputRecord.push_back(str);
+                }
+                else
+                {
+                    ProcessOption(itr->second);
+                }
+
+                return true;
+            };
+
+            for (; index < argc; index++)
             {
                 std::string str(argv[index]);
+
+                if (TryProcessFullName(str))
+                    continue;
+
+                if (TryProcessShortName(str))
+                    continue;
+
+                _invalidInputRecord.push_back(str);
             }
         }
 
     private:
+        std::optional<std::string> GetFullName(const std::string& input)
+        {
+            if (input.size() > 2 && input[0] == '-' && input[1] == '-')
+                return input.substr(2);
+
+            return std::nullopt;
+        }
+
+        std::optional<char> GetShortName(const std::string& input)
+        {
+            if (input.size() == 2 && input[0] == '-' && std::isalpha(input[1]))
+                return input[1];
+
+            return std::nullopt;
+        }
+
+    private:
+        bool _abortWhenErrorInput = false;
         std::vector<Option*> _allOptions;
+        std::vector<std::string> _invalidInputRecord;
         std::unordered_map<std::string, Option*> _fullNameOptionMap;
         std::unordered_map<char, Option*> _shortNameOptionMap;
     };
