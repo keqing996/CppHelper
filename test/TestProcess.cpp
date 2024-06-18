@@ -1,7 +1,8 @@
 
 #include <vector>
 #include <iostream>
-#include <../src/Infra/Process.hpp>
+#include <Infra/Process.hpp>
+#include <Infra/System.hpp>
 
 int main()
 {
@@ -9,7 +10,7 @@ int main()
     auto processInfo = Infra::Process::CreateProcessWithPipe(commandLine);
     if (!processInfo.has_value())
     {
-        auto err = ::GetLastError();
+        auto err = Infra::System::GetLastError();
         std::cout << "Process create failed with last error: " << err << std::endl;
     }
 

@@ -1,4 +1,4 @@
-#include <../src/Infra/System.hpp>
+#include <Infra/System.hpp>
 #include <iostream>
 
 int main()

@@ -1,4 +1,4 @@
-#include <../src/Infra/Windows/Console.hpp>
+#include <Infra/Windows/Console.hpp>
 
 int main()
 {

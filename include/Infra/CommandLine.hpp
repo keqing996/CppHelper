@@ -356,6 +356,11 @@ namespace Infra
             }
         }
 
+        const std::vector<std::string>& GetInvalidInput() const
+        {
+            return _invalidInputRecord;
+        }
+
     private:
         std::optional<std::string> GetFullName(const std::string& input)
         {
