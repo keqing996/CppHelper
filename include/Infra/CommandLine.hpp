@@ -7,9 +7,17 @@
 #include <functional>
 #include <unordered_map>
 #include <optional>
+#include <Infra/Assert.hpp>
 
 namespace Infra
 {
+    enum class CmdOptionType
+    {
+        NoValue,
+        SingleValue,
+        MultiValue
+    };
+
     class CommandLine
     {
     public:
@@ -22,34 +30,16 @@ namespace Infra
         }
 
     public:
-        enum class OptionType
-        {
-            NoValue,
-            SingleValue,
-            MultiValue
-        };
-
         class Option
         {
         public:
-            Option(const std::string& name, char shortName, const std::string& desc)
-                : _fullName(name)
-                , _shortName(shortName)
-                , _desc(desc)
+            Option(const std::string& desc)
+                : _desc(desc)
                 , _settle(false)
             {
             }
 
         public:
-            const std::string& GetFullName()
-            {
-                return _fullName;
-            }
-
-            char GetShortName()
-            {
-                return _shortName;
-            }
 
             const std::string& GetDesc()
             {
@@ -63,11 +53,9 @@ namespace Infra
 
         public:
             virtual bool HasValue() = 0;
-            virtual OptionType Type() = 0;
+            virtual CmdOptionType Type() = 0;
 
         protected:
-            std::string _fullName;
-            char _shortName;
             std::string _desc;
             bool _settle;
 
@@ -76,8 +64,8 @@ namespace Infra
         class OptionNoValue: public Option
         {
         public:
-            OptionNoValue(const std::string& name, char shortName, const std::string& desc)
-                : Option(name, shortName, desc)
+            OptionNoValue(const std::string& desc)
+                : Option(desc)
             {
             }
 
@@ -87,9 +75,9 @@ namespace Infra
                 return false;
             }
 
-            OptionType Type() override
+            CmdOptionType Type() override
             {
-                return OptionType::NoValue;
+                return CmdOptionType::NoValue;
             }
 
             bool Set()
@@ -102,14 +90,8 @@ namespace Infra
         class OptionSingleValue : public Option
         {
         public:
-            OptionSingleValue(const std::string& name, char shortName, const std::string& desc)
-                : Option(name, shortName, desc)
-            {
-            }
-
-            OptionSingleValue(const std::string& name, char shortName, const std::string& desc, const std::string& defaultValue)
-                : Option(name, shortName, desc)
-                , _value(defaultValue)
+            OptionSingleValue(const std::string& desc)
+                : Option(desc)
             {
             }
 
@@ -119,9 +101,9 @@ namespace Infra
                 return true;
             }
 
-            OptionType Type() override
+            CmdOptionType Type() override
             {
-                return OptionType::SingleValue;
+                return CmdOptionType::SingleValue;
             }
 
             void SetValue(const std::string& str)
@@ -149,8 +131,8 @@ namespace Infra
         class OptionMultiValue : public Option
         {
         public:
-            OptionMultiValue(const std::string& name, char shortName, const std::string& desc)
-                : Option(name, shortName, desc)
+            OptionMultiValue(const std::string& desc)
+                : Option(desc)
             {
             }
 
@@ -160,9 +142,9 @@ namespace Infra
                 return true;
             }
 
-            OptionType Type() override
+            CmdOptionType Type() override
             {
-                return OptionType::MultiValue;
+                return CmdOptionType::MultiValue;
             }
 
             void AddValue(const std::string& str)
@@ -219,39 +201,80 @@ namespace Infra
             return result;
         }
 
-    public:
-        void AbortWhenErrorInput(bool doAbort)
-        {
-            _abortWhenErrorInput = doAbort;
-        }
-
-        template<OptionType type>
-        void AddOption(const std::string& fullName, char shortName, const std::string& desc)
+        template<CmdOptionType type>
+        static Option* CreateOption(const std::string& desc)
         {
             Option* pOption = nullptr;
 
-            if constexpr (type == OptionType::NoValue)
-                pOption = new OptionNoValue(fullName, shortName, desc);
-            else if constexpr (type == OptionType::SingleValue)
-                pOption = new OptionSingleValue(fullName, shortName, desc);
-            else if constexpr (type == OptionType::MultiValue)
-                pOption = new OptionMultiValue(fullName, shortName, desc);
+            if constexpr (type == CmdOptionType::NoValue)
+                pOption = new OptionNoValue(desc);
+            else if constexpr (type == CmdOptionType::SingleValue)
+                pOption = new OptionSingleValue(desc);
+            else if constexpr (type == CmdOptionType::MultiValue)
+                pOption = new OptionMultiValue(desc);
+
+            return pOption;
+        }
+
+    public:
+        void SetExitWhenErrorInput(bool doAbort)
+        {
+            _exitWhenErrorInput = doAbort;
+        }
+
+        void SetErrorInputExitCode(int code)
+        {
+            _errorInputExitCode = code;
+        }
+
+        void SetHelpPrintMessageFunc(const std::function<void()>& func)
+        {
+            _printHelpMessageFunc = func;
+        }
+
+        template<CmdOptionType type>
+        void AddOption(const std::string& fullName, char shortName, const std::string& desc)
+        {
+            Option* pOption = CreateOption<type>(desc);
+
+            ASSERT_MSG(_fullNameOptionMap.find(fullName) != _fullNameOptionMap.end(), "Command line duplicate full name option");
+            ASSERT_MSG(_shortNameOptionMap.find(shortName) != _shortNameOptionMap.end(), "Command line duplicate short name option");
 
             _allOptions.push_back(pOption);
             _fullNameOptionMap[fullName] = pOption;
             _shortNameOptionMap[shortName] = pOption;
         }
 
-        void AddOption(const std::string& fullName, char shortName, const std::string& desc, const std::string& defaultValue)
+        template<CmdOptionType type>
+        void AddOption(const std::string& fullName, const std::string& desc)
         {
-            Option* pOption = new OptionSingleValue(fullName, shortName, desc, defaultValue);
+            Option* pOption = CreateOption<type>(desc);
+
+            ASSERT_MSG(_fullNameOptionMap.find(fullName) != _fullNameOptionMap.end(), "Command line duplicate full name option");
+
             _allOptions.push_back(pOption);
             _fullNameOptionMap[fullName] = pOption;
+        }
+
+        template<CmdOptionType type>
+        void AddOption(char shortName, const std::string& desc)
+        {
+            Option* pOption = CreateOption<type>(desc);
+
+            ASSERT_MSG(_shortNameOptionMap.find(shortName) != _shortNameOptionMap.end(), "Command line duplicate short name option");
+
+            _allOptions.push_back(pOption);
             _shortNameOptionMap[shortName] = pOption;
         }
 
         void Parse(int argc, char** argv)
         {
+            if (argc == 2 && (argv[1] == "-h" || argv[1] == "-help"))
+            {
+                PrintHelpMessage();
+                std::exit(0);
+            }
+
             _invalidInputRecord.clear();
             int index = 1;
 
@@ -259,13 +282,13 @@ namespace Infra
             {
                 switch (pOption->Type())
                 {
-                    case OptionType::NoValue:
+                    case CmdOptionType::NoValue:
                     {
                         auto* pNoValueOption = dynamic_cast<OptionNoValue*>(pOption);
                         pNoValueOption->Set();
                         break;
                     }
-                    case OptionType::SingleValue:
+                    case CmdOptionType::SingleValue:
                     {
                         auto* pSingleValueOption = dynamic_cast<OptionSingleValue*>(pOption);
                         if (index + 1 < argc)
@@ -275,7 +298,7 @@ namespace Infra
                         }
                         break;
                     }
-                    case OptionType::MultiValue:
+                    case CmdOptionType::MultiValue:
                     {
                         auto* pMultiValueOption = dynamic_cast<OptionMultiValue*>(pOption);
                         while (index + 1 < argc)
@@ -301,10 +324,10 @@ namespace Infra
                 const auto& key = *fullName;
                 if (const auto itr = _fullNameOptionMap.find(key); itr == _fullNameOptionMap.end())
                 {
-                    if (_abortWhenErrorInput)
+                    if (_exitWhenErrorInput)
                     {
                         std::cout << "Invalid option: " << key << std::endl;
-                        std::abort();
+                        std::exit(_errorInputExitCode);
                     }
 
                     _invalidInputRecord.push_back(str);
@@ -326,10 +349,10 @@ namespace Infra
                 const auto key = *fullName;
                 if (const auto itr = _shortNameOptionMap.find(key); itr == _shortNameOptionMap.end())
                 {
-                    if (_abortWhenErrorInput)
+                    if (_exitWhenErrorInput)
                     {
                         std::cout << "Invalid option: " << key << std::endl;
-                        std::abort();
+                        std::exit(_errorInputExitCode);
                     }
 
                     _invalidInputRecord.push_back(str);
@@ -378,11 +401,28 @@ namespace Infra
             return std::nullopt;
         }
 
+        void PrintHelpMessage()
+        {
+            if (!_printHelpMessageFunc)
+                _printHelpMessageFunc();
+            else
+            {
+
+            }
+        }
+
     private:
-        bool _abortWhenErrorInput = false;
-        std::vector<Option*> _allOptions;
+        // Error handle
+        bool _exitWhenErrorInput = false;
+        int _errorInputExitCode = 1;
         std::vector<std::string> _invalidInputRecord;
+
+        // Options
+        std::vector<Option*> _allOptions;
         std::unordered_map<std::string, Option*> _fullNameOptionMap;
         std::unordered_map<char, Option*> _shortNameOptionMap;
+
+        // Help message
+        std::function<void()> _printHelpMessageFunc;
     };
 }
