@@ -40,6 +40,26 @@ namespace Infra
         return _settle;
     }
 
+    void CommandLine::Option::SetFullName(const std::string& fullName)
+    {
+        _fullName = fullName;
+    }
+
+    void CommandLine::Option::SetShortName(char shortName)
+    {
+        _shortName = shortName;
+    }
+
+    const std::optional<std::string>& CommandLine::Option::GetFullName() const
+    {
+        return _fullName;
+    }
+
+    const std::optional<char>& CommandLine::Option::GetShortName() const
+    {
+        return _shortName;
+    }
+
     CommandLine::OptionNoValue::OptionNoValue(const std::string& desc): Option(desc)
     {
     }
@@ -132,7 +152,13 @@ namespace Infra
 
     void CommandLine::Parse(int argc, char** argv)
     {
-        if (argc == 2 && (argv[1] == "-h" || argv[1] == "-help"))
+        if (argc == 1)
+        {
+            PrintHelpMessage();
+            std::exit(0);
+        }
+
+        if (argc == 2 && (argv[1] == "-h" || argv[1] == "-help" || argv[1] == "-?"))
         {
             PrintHelpMessage();
             std::exit(0);
@@ -242,12 +268,18 @@ namespace Infra
         }
     }
 
-    void CommandLine::PrintHelpMessage()
+    void CommandLine::PrintHelpMessage() const
     {
         if (!_printHelpMessageFunc)
             _printHelpMessageFunc();
         else
         {
+            std::stringstream outputStream;
+            outputStream << "Options" << std::endl;
+            for (int i = 0; i < _allOptions.size(); i++)
+            {
+                outputStream << "\t";
+            }
 
         }
     }

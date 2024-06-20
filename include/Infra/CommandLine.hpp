@@ -29,16 +29,22 @@ namespace Infra
         {
         public:
             explicit Option(const std::string& desc);
+            virtual ~Option() = default;
 
             const std::string& GetDesc();
             bool Settle() const;
             virtual bool HasValue() = 0;
             virtual CmdOptionType Type() = 0;
+            void SetFullName(const std::string& fullName);
+            void SetShortName(char shortName);
+            const std::optional<std::string>& GetFullName() const;
+            const std::optional<char>& GetShortName() const;
 
         protected:
             std::string _desc;
             bool _settle;
-
+            std::optional<std::string> _fullName;
+            std::optional<char> _shortName;
         };
 
         class OptionNoValue: public Option
@@ -129,7 +135,7 @@ namespace Infra
         template<CmdOptionType type>
         static Option* CreateOption(const std::string& desc);
 
-        void PrintHelpMessage();
+        void PrintHelpMessage() const;
 
     private:
         // Error handle
@@ -190,6 +196,9 @@ namespace Infra
         ASSERT_MSG(_fullNameOptionMap.find(fullName) != _fullNameOptionMap.end(), "Command line duplicate full name option");
         ASSERT_MSG(_shortNameOptionMap.find(shortName) != _shortNameOptionMap.end(), "Command line duplicate short name option");
 
+        pOption->SetFullName(fullName);
+        pOption->SetShortName(shortName);
+
         _allOptions.push_back(pOption);
         _fullNameOptionMap[fullName] = pOption;
         _shortNameOptionMap[shortName] = pOption;
@@ -202,6 +211,8 @@ namespace Infra
 
         ASSERT_MSG(_fullNameOptionMap.find(fullName) != _fullNameOptionMap.end(), "Command line duplicate full name option");
 
+        pOption->SetFullName(fullName);
+
         _allOptions.push_back(pOption);
         _fullNameOptionMap[fullName] = pOption;
     }
@@ -212,6 +223,8 @@ namespace Infra
         Option* pOption = CreateOption<type>(desc);
 
         ASSERT_MSG(_shortNameOptionMap.find(shortName) != _shortNameOptionMap.end(), "Command line duplicate short name option");
+
+        pOption->SetShortName(shortName);
 
         _allOptions.push_back(pOption);
         _shortNameOptionMap[shortName] = pOption;
