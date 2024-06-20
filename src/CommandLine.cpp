@@ -276,11 +276,27 @@ namespace Infra
         {
             std::stringstream outputStream;
             outputStream << "Options" << std::endl;
-            for (int i = 0; i < _allOptions.size(); i++)
+            for (const auto pOption: _allOptions)
             {
+                auto fullName = pOption->GetFullName();
+                auto shortName = pOption->GetShortName();
+
                 outputStream << "\t";
+
+                if (fullName && shortName)
+                    outputStream << fullName.value() << ", " << shortName.value();
+                else
+                {
+                    if (fullName)
+                        outputStream << fullName.value();
+                    if (shortName)
+                        outputStream << shortName.value();
+                }
+
+                outputStream << "\t\t" << pOption->GetDesc() << std::endl;
             }
 
+            std::cout << outputStream.str();
         }
     }
 }
