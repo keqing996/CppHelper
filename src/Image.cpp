@@ -6,12 +6,44 @@
 
 namespace Infra
 {
-   Image::Image(uint width, uint height, std::uint8_t r, std::uint8_t g, std::uint8_t b)
-        : Image(width, height, r, g, b, 255)
+    Image::Pixel::Pixel()
+        : Pixel(0, 0, 0, 0)
     {
     }
 
-    Image::Image(uint width, uint height, std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a)
+    Image::Pixel::Pixel(uint32_t packColor)
+    {
+        auto pData = reinterpret_cast<std::uint8_t*>(&packColor);
+        r = pData[0];
+        g = pData[1];
+        b = pData[2];
+        a = pData[3];
+    }
+
+    Image::Pixel::Pixel(std::uint8_t red, std::uint8_t green, std::uint8_t blue)
+        : Pixel(red, green, blue, 255)
+    {
+    }
+
+    Image::Pixel::Pixel(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha)
+        : r(red), g(green), b(blue), a(alpha)
+    {
+    }
+
+    uint32_t Image::Pixel::Pack() const
+    {
+        uint32_t result;
+
+        uint8_t* pColor = reinterpret_cast<uint8_t*>(&result);
+        pColor[0] = r;
+        pColor[1] = g;
+        pColor[2] = b;
+        pColor[3] = a;
+
+        return result;
+    }
+
+    Image::Image(uint width, uint height, Pixel pixel)
     {
         if (width == 0 || height == 0)
         {
@@ -24,13 +56,7 @@ namespace Infra
        _width = width;
        _height = height;
 
-        uint32_t color;
-        uint8_t* pColor = reinterpret_cast<uint8_t*>(&color);
-        pColor[0] = r;
-        pColor[1] = g;
-        pColor[2] = b;
-        pColor[3] = a;
-
+        uint32_t color = pixel.Pack();
         size_t pixelSize = static_cast<std::size_t>(_width) * static_cast<std::size_t>(_height);
 
         std::vector<std::uint8_t> newData(pixelSize * 4);
@@ -82,6 +108,29 @@ namespace Infra
        ScopeGuard fileStreamGuard = [&] { ::stbi_image_free(pStbImage); };
 
        CopyFromData(width, height, pStbImage);
+    }
+
+    std::pair<Image::uint, Image::uint> Image::GetSize() const
+    {
+       return { _width, _height };
+    }
+
+    Image::Pixel Image::GetPixel(uint x, uint y) const
+    {
+        if (x >= _width || y >= _height)
+            return {};
+
+        auto pData = reinterpret_cast<const uint32_t*>(_data.data());
+        return pData[x + y * _width];
+    }
+
+    void Image::SetPixel(uint x, uint y, Pixel pixel)
+    {
+        if (x >= _width || y >= _height)
+            return;
+
+        auto pData = reinterpret_cast<uint32_t*>(_data.data());
+        pData[x + y * _width] = pixel.Pack();
     }
 
     void Image::CopyFromData(uint width, uint height, std::uint8_t* pData)
