@@ -2,6 +2,9 @@
 #include <memory>
 #include "Infra/ScopeGuard.hpp"
 #include "Infra/Image.hpp"
+
+#include <algorithm>
+
 #include "ThirdParty/stb_image.h"
 
 namespace Infra
@@ -131,6 +134,25 @@ namespace Infra
 
         auto pData = reinterpret_cast<uint32_t*>(_data.data());
         pData[x + y * _width] = pixel.Pack();
+    }
+
+    void Image::VerticalFlip()
+    {
+        if (!_data.empty())
+        {
+            auto rowSizeInByte = _width * 4;
+
+            auto top = _data.begin();
+            auto bottom = _data.end() - rowSizeInByte;
+
+            for (std::size_t i = 0; i < _height / 2; i++)
+            {
+                std::swap_ranges(top, top + rowSizeInByte, bottom);
+
+                top += rowSizeInByte;
+                bottom -= rowSizeInByte;
+            }
+        }
     }
 
     void Image::CopyFromData(uint width, uint height, std::uint8_t* pData)

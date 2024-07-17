@@ -6,6 +6,7 @@
 
 namespace Infra
 {
+    // Y axis zero on top
     class Image
     {
         using uint = unsigned int;
@@ -43,12 +44,14 @@ namespace Infra
 
         void SetPixel(uint x, uint y, Pixel pixel);
 
+        void VerticalFlip();
+
     private:
         void CopyFromData(uint width, uint height, std::uint8_t* pData);
 
     private:
         std::vector<std::uint8_t> _data;
-        uint _width = 0;
-        uint _height = 0;
+        uint _width = 0; // pixels
+        uint _height = 0; // pixels
     };
 }
