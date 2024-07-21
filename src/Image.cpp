@@ -113,7 +113,7 @@ namespace Infra
        CopyFromData(width, height, pStbImage);
     }
 
-    std::pair<Image::uint, Image::uint> Image::GetSize() const
+    std::pair<Image::uint, Image::uint> Image::GetPixelSize() const
     {
        return { _width, _height };
     }
@@ -153,6 +153,16 @@ namespace Infra
                 bottom -= rowSizeInByte;
             }
         }
+    }
+
+    const std::uint8_t* Image::GetBytesData() const
+    {
+        return _data.data();
+    }
+
+    const std::uint32_t* Image::GetPixelsData() const
+    {
+        return reinterpret_cast<const std::uint32_t*>(_data.data());
     }
 
     void Image::CopyFromData(uint width, uint height, std::uint8_t* pData)

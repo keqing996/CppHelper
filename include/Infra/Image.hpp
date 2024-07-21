@@ -38,13 +38,16 @@ namespace Infra
         Image(const void* pMemoryData, size_t dataSize);
 
     public:
-        std::pair<uint, uint> GetSize() const;
+        std::pair<uint, uint> GetPixelSize() const;
 
         Pixel GetPixel(uint x, uint y) const;
 
         void SetPixel(uint x, uint y, Pixel pixel);
 
         void VerticalFlip();
+
+        const std::uint8_t* GetBytesData() const;
+        const std::uint32_t* GetPixelsData() const;
 
     private:
         void CopyFromData(uint width, uint height, std::uint8_t* pData);
