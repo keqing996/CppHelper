@@ -1,10 +1,10 @@
-#include "Infra/PlatformDefine.hpp"
+#include "Infra/PlatformDefine.h"
 
 #if PLATFORM_WINDOWS
 
-#include "Infra/Windows/WindowsDefine.hpp"
-#include "Infra/Process.hpp"
-#include "Infra/String.hpp"
+#include "Infra/Windows/WindowsDefine.h"
+#include "Infra/Process.h"
+#include "Infra/String.h"
 #include <functional>
 #include <Psapi.h>
 #undef CreateProcess

@@ -1,10 +1,10 @@
-#include "Infra/PlatformDefine.hpp"
+#include "Infra/PlatformDefine.h"
 
 #if PLATFORM_WINDOWS
 
-#include "Infra/System.hpp"
-#include "Infra/Windows/WindowsDefine.hpp"
-#include "Infra/String.hpp"
+#include "Infra/System.h"
+#include "Infra/Windows/WindowsDefine.h"
+#include "Infra/String.h"
 #include <Psapi.h>
 #undef GetEnvironmentVariable
 #undef SetEnvironmentVariable

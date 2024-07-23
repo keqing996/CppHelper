@@ -1,5 +1,5 @@
 #include <mutex>
-#include "Infra/Logger.hpp"
+#include "Infra/Logger.h"
 
 static std::mutex gMutex = {};
 

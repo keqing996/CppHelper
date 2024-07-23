@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdint>
 #include <array>
+#include <optional>
 
 namespace Infra
 {

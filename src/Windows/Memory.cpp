@@ -1,9 +1,9 @@
-#include "Infra/PlatformDefine.hpp"
+#include "Infra/PlatformDefine.h"
 
 #if PLATFORM_WINDOWS
 
-#include "Infra/Windows/WindowsDefine.hpp"
-#include "Infra/Memory.hpp"
+#include "Infra/Windows/WindowsDefine.h"
+#include "Infra/Memory.h"
 
 namespace Infra
 {

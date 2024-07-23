@@ -1,7 +1,7 @@
 
 #include <memory>
-#include "Infra/ScopeGuard.hpp"
-#include "Infra/Image.hpp"
+#include "Infra/ScopeGuard.h"
+#include "Infra/Image.h"
 
 #include <algorithm>
 

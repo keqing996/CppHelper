@@ -2,9 +2,9 @@
 #include <fstream>
 #include <filesystem>
 #include <sstream>
-#include "Infra/ScopeGuard.hpp"
-#include "Infra/String.hpp"
-#include "Infra/File.hpp"
+#include "Infra/ScopeGuard.h"
+#include "Infra/String.h"
+#include "Infra/File.h"
 
 namespace Infra
 {

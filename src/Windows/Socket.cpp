@@ -1,12 +1,12 @@
-#include "Infra/Windows/WindowsDefine.hpp"
+#include "Infra/Windows/WindowsDefine.h"
 
 #if PLATFORM_WINDOWS
 
 #include <mutex>
 #include <thread>
 #include <optional>
-#include "Infra/Socket.hpp"
-#include "Infra/String.hpp"
+#include "Infra/Socket.h"
+#include "Infra/String.h"
 
 #include <WinSock2.h>
 #include <ws2ipdef.h>

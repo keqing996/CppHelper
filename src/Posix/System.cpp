@@ -1,4 +1,4 @@
-#include "Infra/PlatformDefine.hpp"
+#include "Infra/PlatformDefine.h"
 
 #if PLATFORM_SUPPORT_POSIX
 
@@ -8,7 +8,7 @@
 #include <cerrno>
 #include <linux/limits.h>
 
-#include "Infra/System.hpp"
+#include "Infra/System.h"
 
 namespace Infra
 {
