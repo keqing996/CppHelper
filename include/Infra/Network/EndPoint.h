@@ -7,11 +7,7 @@
 
 namespace Infra
 {
-    enum class AddressFamily
-    {
-        IpV4,
-        IpV6
-    };
+
 
     enum class Protocol
     {

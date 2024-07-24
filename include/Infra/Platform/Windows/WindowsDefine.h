@@ -1,6 +1,5 @@
-#pragma once
 
-#include "../PlatformDefine.h"
+#include "../../PlatformDefine.h"
 
 #if PLATFORM_WINDOWS
 
