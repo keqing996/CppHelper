@@ -10,6 +10,16 @@
 
 namespace Infra
 {
+    std::uint32_t IpAddress<AddressFamily::IpV4>::HostToNetwork(std::uint32_t value)
+    {
+        return ::htonl(value);
+    }
+
+    std::uint32_t IpAddress<AddressFamily::IpV4>::NetworkToHost(std::uint32_t value)
+    {
+        return ::ntohl(value);
+    }
+
     std::optional<IpAddress<AddressFamily::IpV4>> IpAddress<AddressFamily::IpV4>::TryParse(const std::string& str)
     {
         in_addr destinationIP {};

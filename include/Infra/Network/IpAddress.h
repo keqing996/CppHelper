@@ -35,6 +35,8 @@ namespace Infra
         static IpAddress BROADCAST;
 
         static std::optional<IpAddress> TryParse(const std::string& str);
+        static std::uint32_t HostToNetwork(std::uint32_t value);
+        static std::uint32_t NetworkToHost(std::uint32_t value);
 
     private:
         std::uint32_t _address;

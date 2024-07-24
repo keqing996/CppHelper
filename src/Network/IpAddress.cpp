@@ -19,11 +19,11 @@ namespace Infra
 
     IpAddress<AddressFamily::IpV4>::IpAddress(std::uint8_t byte1, std::uint8_t byte2, std::uint8_t byte3, std::uint8_t byte4)
     {
-        std::uint8_t* pU8 = reinterpret_cast<std::uint8_t*>(&_address);
-        pU8[0] = byte1;
-        pU8[1] = byte2;
-        pU8[2] = byte3;
-        pU8[3] = byte4;
+        _address = static_cast<std::uint32_t>(byte1) << 24;
+        _address |= static_cast<std::uint32_t>(byte2) << 16;
+        _address |= static_cast<std::uint32_t>(byte3) << 8;
+        _address |= static_cast<std::uint32_t>(byte4);
+        _address = HostToNetwork(_address);
     }
 
     IpAddress<AddressFamily::IpV6>::IpAddress(const uint8_t* pAddr)
