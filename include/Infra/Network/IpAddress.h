@@ -26,6 +26,9 @@ namespace Infra
         explicit IpAddress(std::uint32_t addr);
         IpAddress(std::uint8_t byte1, std::uint8_t byte2, std::uint8_t byte3, std::uint8_t byte4);
 
+        bool operator==(const IpAddress& left, const IpAddress& right) const;
+        bool operator!=(const IpAddress& left, const IpAddress& right) const;
+
     public:
         std::string ToString() const;
 
@@ -47,6 +50,9 @@ namespace Infra
     {
     public:
         explicit IpAddress(const uint8_t* pAddr);
+
+        bool operator==(const IpAddress& left, const IpAddress& right) const;
+        bool operator!=(const IpAddress& left, const IpAddress& right) const;
 
     public:
         std::string ToString() const;
