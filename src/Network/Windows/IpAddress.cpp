@@ -32,6 +32,31 @@ namespace Infra
 
         return IpAddress{ reinterpret_cast<const std::uint8_t*>(&destinationIP.u.Byte) };
     }
+
+    std::string IpAddress<AddressFamily::IpV4>::ToString() const
+    {
+        in_addr address{};
+        address.s_addr = _address;
+
+        char resultBuffer[INET_ADDRSTRLEN];
+
+        ::inet_ntop(AF_INET, &address, resultBuffer, INET_ADDRSTRLEN);
+
+        return resultBuffer;
+    }
+
+    std::string IpAddress<AddressFamily::IpV6>::ToString() const
+    {
+        in6_addr address{};
+
+        ::memcpy(&address.u.Byte, _address.data(), ADDR_SIZE);
+
+        char resultBuffer[INET6_ADDRSTRLEN];
+
+        ::inet_ntop(AF_INET, &address, resultBuffer, INET6_ADDRSTRLEN);
+
+        return resultBuffer;
+    }
 }
 
 #endif

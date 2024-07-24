@@ -27,6 +27,9 @@ namespace Infra
         IpAddress(std::uint8_t byte1, std::uint8_t byte2, std::uint8_t byte3, std::uint8_t byte4);
 
     public:
+        std::string ToString() const;
+
+    public:
         static IpAddress LOCAL_HOST;
         static IpAddress ANY;
         static IpAddress BROADCAST;
@@ -42,6 +45,9 @@ namespace Infra
     {
     public:
         explicit IpAddress(const uint8_t* pAddr);
+
+    public:
+        std::string ToString() const;
 
     public:
         static int constexpr ADDR_SIZE = 16;

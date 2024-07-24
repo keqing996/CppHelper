@@ -5,6 +5,7 @@
 
 #include "Infra/Network/IpAddress.h"
 
+#include <cstring>
 #include <arpa/inet.h>
 
 namespace Infra
@@ -27,6 +28,31 @@ namespace Infra
             return std::nullopt;
 
         return IpAddress{ reinterpret_cast<const std::uint8_t*>(&destinationIP.__in6_u.__u6_addr16) };
+    }
+
+    std::string IpAddress<AddressFamily::IpV4>::ToString() const
+    {
+        in_addr address{};
+        address.s_addr = _address;
+
+        char resultBuffer[INET_ADDRSTRLEN];
+
+        ::inet_ntop(AF_INET, &address, resultBuffer, INET_ADDRSTRLEN);
+
+        return resultBuffer;
+    }
+
+    std::string IpAddress<AddressFamily::IpV6>::ToString() const
+    {
+        in6_addr address{};
+
+        ::memcpy(&address.__in6_u.__u6_addr8, _address.data(), ADDR_SIZE);
+
+        char resultBuffer[INET6_ADDRSTRLEN];
+
+        ::inet_ntop(AF_INET, &address, resultBuffer, INET6_ADDRSTRLEN);
+
+        return resultBuffer;
     }
 }
 

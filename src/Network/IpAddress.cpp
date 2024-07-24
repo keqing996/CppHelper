@@ -1,6 +1,8 @@
 
 #include "Infra/Network/IpAddress.h"
 
+#include <cstring>
+
 namespace Infra
 {
     static IpAddress<AddressFamily::IpV4>::IpAddress LOCAL_HOST (127, 0, 0, 1);
