@@ -10,14 +10,13 @@
 
 namespace Infra
 {
-    std::uint32_t IpAddress<AddressFamily::IpV4>::HostToNetwork(std::uint32_t value)
+    IpAddress<AddressFamily::IpV4>::IpAddress(uint8_t byte1, uint8_t byte2, uint8_t byte3, uint8_t byte4)
     {
-        return ::htonl(value);
-    }
-
-    std::uint32_t IpAddress<AddressFamily::IpV4>::NetworkToHost(std::uint32_t value)
-    {
-        return ::ntohl(value);
+        _address = static_cast<uint32_t>(byte1) << 24;
+        _address |= static_cast<uint32_t>(byte2) << 16;
+        _address |= static_cast<uint32_t>(byte3) << 8;
+        _address |= static_cast<uint32_t>(byte4);
+        _address = ::htonl(_address);
     }
 
     std::optional<IpAddress<AddressFamily::IpV4>> IpAddress<AddressFamily::IpV4>::TryParse(const std::string& str)
@@ -27,7 +26,9 @@ namespace Infra
         if (result != 1)
             return std::nullopt;
 
-        return IpAddress{ destinationIP.s_addr };
+        IpAddress ip;
+        ip._address = destinationIP.s_addr;
+        return ip;
     }
 
     std::optional<IpAddress<AddressFamily::IpV6>> IpAddress<AddressFamily::IpV6>::TryParse(const std::string& str)
@@ -37,7 +38,7 @@ namespace Infra
         if (result != 1)
             return std::nullopt;
 
-        return IpAddress{ reinterpret_cast<const std::uint8_t*>(&destinationIP.__in6_u.__u6_addr16) };
+        return IpAddress{ reinterpret_cast<const uint8_t*>(&destinationIP.__in6_u.__u6_addr16) };
     }
 
     std::string IpAddress<AddressFamily::IpV4>::ToString() const

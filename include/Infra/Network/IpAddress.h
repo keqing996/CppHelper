@@ -23,8 +23,7 @@ namespace Infra
     {
     public:
         IpAddress();
-        explicit IpAddress(std::uint32_t addr);
-        IpAddress(std::uint8_t byte1, std::uint8_t byte2, std::uint8_t byte3, std::uint8_t byte4);
+        IpAddress(uint8_t byte1, uint8_t byte2, uint8_t byte3, uint8_t byte4);
 
         bool operator==(const IpAddress& left, const IpAddress& right) const;
         bool operator!=(const IpAddress& left, const IpAddress& right) const;
@@ -38,11 +37,9 @@ namespace Infra
         static IpAddress BROADCAST;
 
         static std::optional<IpAddress> TryParse(const std::string& str);
-        static std::uint32_t HostToNetwork(std::uint32_t value);
-        static std::uint32_t NetworkToHost(std::uint32_t value);
 
     private:
-        std::uint32_t _address;
+        uint32_t _address;
     };
 
     template<>
@@ -64,4 +61,7 @@ namespace Infra
     private:
         std::array<uint8_t, ADDR_SIZE> _address{};
     };
+
+    using IpV4 = IpAddress<AddressFamily::IpV4>;
+    using IpV6 = IpAddress<AddressFamily::IpV6>;
 }
