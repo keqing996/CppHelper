@@ -23,6 +23,7 @@ namespace Infra
     {
     public:
         IpAddress();
+        explicit IpAddress(uint32_t hostOrderIp);
         IpAddress(uint8_t byte1, uint8_t byte2, uint8_t byte3, uint8_t byte4);
 
         bool operator==(const IpAddress& left, const IpAddress& right) const;
@@ -39,6 +40,7 @@ namespace Infra
         static std::optional<IpAddress> TryParse(const std::string& str);
 
     private:
+        // network order
         uint32_t _address;
     };
 
@@ -55,11 +57,12 @@ namespace Infra
         std::string ToString() const;
 
     public:
-        static int constexpr ADDR_SIZE = 16;
+        static int constexpr ADDR_SIZE_BYTE = 16;
         static std::optional<IpAddress> TryParse(const std::string& str);
 
     private:
-        std::array<uint8_t, ADDR_SIZE> _address{};
+        // network order
+        std::array<uint8_t, ADDR_SIZE_BYTE> _address{};
     };
 
     using IpV4 = IpAddress<AddressFamily::IpV4>;
