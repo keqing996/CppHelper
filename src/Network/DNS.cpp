@@ -24,11 +24,12 @@ namespace Infra
             if (p->ai_family == AF_INET)
             {
                 sockaddr_in* ipv4 = reinterpret_cast<sockaddr_in*>(p->ai_addr);
-                (ipv4->sin_addr).s_addr;
+                result.v4Addr.emplace_back(::ntohl((ipv4->sin_addr).s_addr));
             }
             else if (p->ai_family == AF_INET6)
             {
-
+                sockaddr_in6* ipv6 = reinterpret_cast<sockaddr_in6*>(p->ai_addr);
+                result.v6Addr.emplace_back((ipv6->sin6_addr).s6_addr);
             }
         }
 

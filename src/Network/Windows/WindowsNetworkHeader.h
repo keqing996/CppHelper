@@ -1,3 +1,4 @@
+#pragma once
 
 #include "Infra/PlatformDefine.h"
 
