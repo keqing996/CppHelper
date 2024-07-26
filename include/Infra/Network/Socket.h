@@ -1,50 +1,30 @@
 #pragma once
 
-#include <string>
-#include <cstdint>
-#include <array>
-#include <optional>
-#include "SocketBase.hpp"
+#include "EndPoint.h"
 
 namespace Infra
 {
-    struct SocketHandle
-    {
-        void* handle = nullptr;
-        AddressFamily family;
-        Protocol protocol;
-    };
-
     class Socket
     {
     public:
-        Socket() = delete;
+        enum class Protocol
+        {
+            TCP, UDP
+        };
 
     public:
-        // Init and clear
-        static auto IsInitialized() -> bool;
-        static auto InitEnvironment() -> bool;
-        static auto DestroyEnvironment() -> void;
+        void SetBlocking(bool block);
 
-        // Create and destroy
-        static auto CreateEndpoint(const std::string& ipStr, uint16_t port) -> std::optional<EndPoint<AddressFamily::IpV4>>;
-        static auto CreateSocket(AddressFamily family, Protocol protocol) -> std::optional<SocketHandle>;
-        static auto DestroySocket(const SocketHandle& socketHandle) -> void;
+    public:
+        static std::optional<Socket> Create(AddressFamily af = AddressFamily::IpV4, Protocol protocol = Protocol::TCP);
 
-        // Client
-        template<AddressFamily addrFamily>
-        static auto Connect(const SocketHandle& socketHandle, const EndPoint<addrFamily>& endpoint, int timeOutInMs = -1) -> bool;
+    private:
+        Socket(AddressFamily af, Protocol protocol, void* handle);
 
-        // Server
-        template<AddressFamily addrFamily>
-        static auto Bind(const SocketHandle& socketHandle, const EndPoint<addrFamily>& endpoint) -> bool;
-        static auto Listen(const SocketHandle& socketHandle) -> bool;
-        static auto Accept(const SocketHandle& socketHandle, int timeOutInMs = -1) -> std::optional<SocketHandle>;
-
-        // Send & Recv
-        static auto Send(const SocketHandle& socketHandle, const char* pDataBuffer, int bufferSize) -> bool;
-        static auto Receive(const SocketHandle& socketHandle, char* pDataBuffer, int bufferSize, int timeOutInMs = -1) -> std::optional<int>;
-
+    private:
+        Protocol _protocol;
+        AddressFamily _af;
+        void* _nativeHandle;
+        bool _isBlocking;
     };
-
 }

@@ -8,4 +8,11 @@
 
 #include <ws2tcpip.h>
 
+using SocketHanle = SOCKET;
+
+inline SocketHanle GetInvalidSocket()
+{
+    return INVALID_SOCKET;
+}
+
 #endif
