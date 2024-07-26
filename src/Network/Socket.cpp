@@ -3,9 +3,6 @@
 #include "Windows/WindowsNetworkHeader.h"
 #include "Posix/PosixNetworkHeader.h"
 
-#define ToGeneralHandle(x) reinterpret_cast<void*>(x)
-#define ToNativeHandle(x) reinterpret_cast<SocketHanle>(x)
-
 namespace Infra
 {
     static int GetAddressFamily(AddressFamily family)
@@ -34,17 +31,11 @@ namespace Infra
         return std::make_pair(IPPROTO_TCP, SOCK_STREAM);
     }
 
-    void Socket::SetBlocking(bool block)
-    {
-        u_long blocking = block ? 0 : 1;
-        ::ioctlsocket(ToNativeHandle(_nativeHandle), static_cast<long>(FIONBIO), &blocking);
-    }
-
     std::optional<Socket> Socket::Create(AddressFamily af, Protocol protocol)
     {
         auto addressFamily = GetAddressFamily(af);
         auto [wsaSocketType, wsaProtocol] = GetProtocol(protocol);
-        const SocketHanle handle = ::socket(addressFamily, wsaSocketType, wsaProtocol);
+        const auto handle = ::socket(addressFamily, wsaSocketType, wsaProtocol);
         if (handle == GetInvalidSocket())
             return std::nullopt;
 
@@ -57,8 +48,18 @@ namespace Infra
     Socket::Socket(AddressFamily af, Protocol protocol, void* handle)
         : _protocol(protocol)
         , _af(af)
-        , _nativeHandle(handle)
+        , _handle(handle)
         , _isBlocking(false)
     {
+    }
+
+    void* Socket::GetNativeHandle() const
+    {
+        return _handle;
+    }
+
+    bool Socket::IsBlocking() const
+    {
+        return _isBlocking;
     }
 }

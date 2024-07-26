@@ -8,11 +8,12 @@
 
 #include <ws2tcpip.h>
 
-using SocketHanle = SOCKET;
-
-inline SocketHanle GetInvalidSocket()
+inline SOCKET GetInvalidSocket()
 {
     return INVALID_SOCKET;
 }
+
+#define ToGeneralHandle(x) reinterpret_cast<void*>(x)
+#define ToNativeHandle(x) reinterpret_cast<SOCKET>(x)
 
 #endif

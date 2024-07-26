@@ -13,7 +13,10 @@ namespace Infra
         };
 
     public:
-        void SetBlocking(bool block);
+        bool IsBlocking() const;
+        bool SetBlocking(bool block);
+        void Close();
+        void* GetNativeHandle() const;
 
     public:
         static std::optional<Socket> Create(AddressFamily af = AddressFamily::IpV4, Protocol protocol = Protocol::TCP);
@@ -24,7 +27,7 @@ namespace Infra
     private:
         Protocol _protocol;
         AddressFamily _af;
-        void* _nativeHandle;
+        void* _handle;
         bool _isBlocking;
     };
 }
