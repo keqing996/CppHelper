@@ -4,26 +4,29 @@
 
 namespace Infra
 {
-    template<AddressFamily>
-    struct EndPoint { };
-
-    template<>
-    struct EndPoint<AddressFamily::IpV4>
+    class EndPoint
     {
-        IpV4 ip;
-        uint16_t port;
+    public:
+        EndPoint(const IpAddress& ip, uint16_t port);
+        EndPoint(const IpAddress& ip, uint16_t port, uint32_t scopeId);
+
+        friend bool operator==(const EndPoint& left, const EndPoint& right);
+        friend bool operator!=(const EndPoint& left, const EndPoint& right);
+
+    public:
+        const IpAddress& GetIp() const;
+        IpAddress::Family GetAddressFamily() const;
+        uint16_t GetPort() const;
+        uint32_t GetV6ScopeId() const;
+
+    private:
+        IpAddress _ip;
+        uint16_t _port;
+        uint32_t _v6ScopeId;
     };
 
-    template<>
-    struct EndPoint<AddressFamily::IpV6>
-    {
-        IpV6 ip;
-        uint16_t port;
-        uint32_t scopeId;
-    };
-
-    using EndPointV4 = EndPoint<AddressFamily::IpV4>;
-    using EndPointV6 = EndPoint<AddressFamily::IpV6>;
+    bool operator==(const EndPoint& left, const EndPoint& right);
+    bool operator!=(const EndPoint& left, const EndPoint& right);
 
 
 }
