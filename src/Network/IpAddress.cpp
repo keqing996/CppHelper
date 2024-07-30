@@ -80,7 +80,7 @@ namespace Infra
             return IpAddress(::ntohl(destinationV4.s_addr));
 
         in6_addr destinationV6 {};
-        if (::inet_pton(AF_INET6, str.c_str(), &destinationV4) == 1)
+        if (::inet_pton(AF_INET6, str.c_str(), &destinationV6) == 1)
             return IpAddress{ reinterpret_cast<const uint8_t*>(&destinationV6.s6_addr) };
 
         return std::nullopt;
