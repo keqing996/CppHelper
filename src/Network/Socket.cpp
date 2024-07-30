@@ -1,17 +1,17 @@
 #include "Infra/Network/Socket.h"
 
-#include "Windows/WindowsNetworkHeader.h"
-#include "Posix/PosixNetworkHeader.h"
+#include "Windows/WindowsSocket.h"
+#include "Posix/PosixSocket.h"
 
 namespace Infra
 {
-    static int GetAddressFamily(AddressFamily family)
+    static int GetAddressFamily(IpAddress::Family family)
     {
         switch (family)
         {
-            case AddressFamily::IpV4:
+            case IpAddress::Family::IpV4:
                 return AF_INET;
-            case AddressFamily::IpV6:
+            case IpAddress::Family::IpV6:
                 return AF_INET6;
         }
 
@@ -31,21 +31,21 @@ namespace Infra
         return std::make_pair(IPPROTO_TCP, SOCK_STREAM);
     }
 
-    std::optional<Socket> Socket::Create(AddressFamily af, Protocol protocol)
+    std::optional<Socket> Socket::Create(IpAddress::Family af, Protocol protocol)
     {
         auto addressFamily = GetAddressFamily(af);
         auto [wsaSocketType, wsaProtocol] = GetProtocol(protocol);
-        const auto handle = ::socket(addressFamily, wsaSocketType, wsaProtocol);
-        if (handle == GetInvalidSocket())
+        const SocketHandle handle = ::socket(addressFamily, wsaSocketType, wsaProtocol);
+        if (handle == Device::GetInvalidSocket())
             return std::nullopt;
 
-        Socket socket(af, protocol, ToGeneralHandle(handle));
+        Socket socket(af, protocol, Device::ToGeneralHandle(handle));
         socket.SetBlocking(true);
 
         return socket;
     }
 
-    Socket::Socket(AddressFamily af, Protocol protocol, void* handle)
+    Socket::Socket(IpAddress::Family af, Protocol protocol, void* handle)
         : _protocol(protocol)
         , _af(af)
         , _handle(handle)
@@ -61,5 +61,10 @@ namespace Infra
     bool Socket::IsBlocking() const
     {
         return _isBlocking;
+    }
+
+    bool Socket::SetBlocking(bool block)
+    {
+        return Device::SetSocketBlocking(_handle, block);
     }
 }

@@ -13,20 +13,31 @@ namespace Infra
         };
 
     public:
+        // Return is socket in blocking mode.
         bool IsBlocking() const;
+
+        // Set socket blocking mode.
         bool SetBlocking(bool block);
+
+        // Close socket.
         void Close();
+
+        // Return native handle by platform, SOCKET on widnows, int on posix plat.
         void* GetNativeHandle() const;
 
+        // Connect an endpoint.
+        bool Connect(const EndPoint& endpoint, int timeOutInMs = -1);
+
+
     public:
-        static std::optional<Socket> Create(AddressFamily af = AddressFamily::IpV4, Protocol protocol = Protocol::TCP);
+        static std::optional<Socket> Create(IpAddress::Family af = IpAddress::Family::IpV4, Protocol protocol = Protocol::TCP);
 
     private:
-        Socket(AddressFamily af, Protocol protocol, void* handle);
+        Socket(IpAddress::Family af, Protocol protocol, void* handle);
 
     private:
         Protocol _protocol;
-        AddressFamily _af;
+        IpAddress::Family _af;
         void* _handle;
         bool _isBlocking;
     };

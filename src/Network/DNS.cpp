@@ -5,9 +5,9 @@
 
 namespace Infra
 {
-    DNS::Result DNS::GetIpAddressByName(const std::string& str)
+    std::vector<IpAddress> DNS::GetIpAddressByName(const std::string& str)
     {
-        Result result;
+        std::vector<IpAddress> result;
 
         addrinfo hints{};
         hints.ai_family = AF_UNSPEC; // ipv4 & ipv6
@@ -24,12 +24,12 @@ namespace Infra
             if (p->ai_family == AF_INET)
             {
                 sockaddr_in* ipv4 = reinterpret_cast<sockaddr_in*>(p->ai_addr);
-                result.v4Addr.emplace_back(::ntohl((ipv4->sin_addr).s_addr));
+                result.emplace_back(::ntohl((ipv4->sin_addr).s_addr));
             }
             else if (p->ai_family == AF_INET6)
             {
                 sockaddr_in6* ipv6 = reinterpret_cast<sockaddr_in6*>(p->ai_addr);
-                result.v6Addr.emplace_back((ipv6->sin6_addr).s6_addr);
+                result.emplace_back((ipv6->sin6_addr).s6_addr);
             }
         }
 
@@ -47,18 +47,15 @@ namespace Infra
         return hostname;
     }
 
-    DNS::Result DNS::GetLocalIpAddress()
+    std::vector<IpAddress> DNS::GetLocalIpAddress()
     {
         return GetIpAddressByName(GetHostName());
     }
 
-    DNS::Result DNS::GetIpAddress(const std::string& str)
+    std::vector<IpAddress> DNS::GetIpAddress(const std::string& str)
     {
-        if (auto ipV4 = IpV4::TryParse(str))
-            return { { ipV4.value() }, {} };
-
-        if (auto ipV6 = IpV6::TryParse(str))
-            return { {}, { ipV6.value() } };
+        if (auto ip = IpAddress::TryParse(str))
+            return { ip.value() };
 
         return GetIpAddressByName(str);
     }
