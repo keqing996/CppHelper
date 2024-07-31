@@ -26,6 +26,8 @@ namespace Infra
         void CloseSocket(void* handle);
 
         bool SetSocketBlocking(void* handle, bool block);
+
+        SocketState GetErrorState();
     }
 }
 

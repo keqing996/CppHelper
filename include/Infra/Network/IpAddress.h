@@ -32,6 +32,8 @@ namespace Infra
 
     public:
         Family GetFamily() const;
+        uint32_t GetV4Addr() const;
+        const uint8_t* GetV6Addr() const;
         std::string ToString() const;
 
     public:

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Infra/Network/SocketState.h"
 #include "EndPoint.h"
 
 namespace Infra
@@ -26,8 +27,10 @@ namespace Infra
         void* GetNativeHandle() const;
 
         // Connect an endpoint.
-        bool Connect(const EndPoint& endpoint, int timeOutInMs = -1);
+        SocketState Connect(const EndPoint& endpoint, int timeOutInMs = -1);
 
+        //
+        virtual void Disconnect();
 
     public:
         static std::optional<Socket> Create(IpAddress::Family af = IpAddress::Family::IpV4, Protocol protocol = Protocol::TCP);
@@ -37,7 +40,7 @@ namespace Infra
 
     private:
         Protocol _protocol;
-        IpAddress::Family _af;
+        IpAddress::Family _addressFamily;
         void* _handle;
         bool _isBlocking;
     };

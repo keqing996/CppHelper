@@ -1,7 +1,7 @@
 
 #include "Infra/Network/IpAddress.h"
-#include "Posix/PosixNetworkHeader.h"
-#include "Windows/WindowsNetworkHeader.h"
+#include "Posix/PosixSocket.h"
+#include "Windows/WindowsSocket.h"
 
 #include <cstring>
 
@@ -39,6 +39,16 @@ namespace Infra
     IpAddress::Family IpAddress::GetFamily() const
     {
         return _addrFamily;
+    }
+
+    uint32_t IpAddress::GetV4Addr() const
+    {
+        return ::ntohl(_data.ipV4Data);
+    }
+
+    const uint8_t* IpAddress::GetV6Addr() const
+    {
+        return _data.ipV6Data;
     }
 
     std::string IpAddress::ToString() const
