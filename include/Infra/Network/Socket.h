@@ -26,11 +26,18 @@ namespace Infra
         // Return native handle by platform, SOCKET on widnows, int on posix plat.
         void* GetNativeHandle() const;
 
+        // Select
+        SocketState SelectRead(int timeoutInMs = -1);
+        SocketState SelectWrite(int timeoutInMs = -1);
+
         // Connect an endpoint.
         SocketState Connect(const EndPoint& endpoint, int timeOutInMs = -1);
 
-        //
+        // Disconnect
         virtual void Disconnect();
+
+        // Get remote ip
+        std::optional<IpAddress> GetRemoteIpAddress() const;
 
     public:
         static std::optional<Socket> Create(IpAddress::Family af = IpAddress::Family::IpV4, Protocol protocol = Protocol::TCP);

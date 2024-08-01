@@ -68,6 +68,44 @@ namespace Infra
         return Device::SetSocketBlocking(_handle, block);
     }
 
+    SocketState Socket::SelectRead(int timeoutInMs)
+    {
+        if (timeoutInMs <= 0)
+            return SocketState::Error;
+
+        fd_set selector;
+        FD_ZERO(&selector);
+        FD_SET(Device::ToNativeHandle(_handle), &selector);
+
+        timeval time{};
+        time.tv_sec  = static_cast<long>(timeoutInMs / 1000);
+        time.tv_usec = timeoutInMs % 1000 * 1000;
+
+        if (select(static_cast<int>(Device::ToNativeHandle(_handle) + 1), &selector, nullptr, nullptr, &time) > 0)
+            return SocketState::Success;
+
+        return Device::GetErrorState();
+    }
+
+    SocketState Socket::SelectWrite(int timeoutInMs)
+    {
+        if (timeoutInMs <= 0)
+            return SocketState::Error;
+
+        fd_set selector;
+        FD_ZERO(&selector);
+        FD_SET(Device::ToNativeHandle(_handle), &selector);
+
+        timeval time{};
+        time.tv_sec  = static_cast<long>(timeoutInMs / 1000);
+        time.tv_usec = timeoutInMs % 1000 * 1000;
+
+        if (select(static_cast<int>(Device::ToNativeHandle(_handle) + 1), nullptr, &selector, nullptr, &time) > 0)
+            return SocketState::Success;
+
+        return Device::GetErrorState();
+    }
+
     SocketState Socket::Connect(const EndPoint& endpoint, int timeOutInMs)
     {
         // Check address families match.
@@ -108,7 +146,7 @@ namespace Infra
 
         if (timeOutInMs <= 0)
         {
-            // No timeout case,
+            // No timeout case, just connect
             if (::connect(Device::ToNativeHandle(_handle), pSockAddr, structLen) == -1)
                 return Device::GetErrorState();
 
@@ -116,15 +154,30 @@ namespace Infra
         }
         else
         {
+            // Has timeout case.
+            // 1. Socket is blocking, change socket to non-blocking, then connect and select.
+            // 2. Socket is non-blocking,
             const bool originalBlockState = IsBlocking();
 
             if (originalBlockState)
                 SetBlocking(false);
 
+            // Connect once, if connection is success, no need to select.
             if (::connect(Device::ToNativeHandle(_handle), pSockAddr, structLen) >= 0)
             {
                 SetBlocking(originalBlockState);
                 return SocketState::Success;
+            }
+
+            SocketState currentState = Device::GetErrorState();
+
+            // Socket is not blocking, return immediately
+            if (!originalBlockState)
+                return currentState;
+            else
+            {
+                auto state = SelectWrite(timeOutInMs);
+                if (state == SocketState::Success && )
             }
         }
 
@@ -133,5 +186,16 @@ namespace Infra
     void Socket::Disconnect()
     {
         Close();
+    }
+
+    std::optional<IpAddress> Socket::GetRemoteIpAddress() const
+    {
+        if (Device::ToNativeHandle(_handle) == Device::GetInvalidSocket())
+            return std::nullopt;
+
+        if (_addressFamily == IpAddress::Family::IpV4)
+        {
+
+        }
     }
 }
