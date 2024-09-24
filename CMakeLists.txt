@@ -22,6 +22,7 @@ if (ENABLE_INFRA_TEST)
 
     add_executable          (test_string ./test/TestString.cpp)
     target_link_libraries   (test_string infra)
+    add_test                (NAME test_string COMMAND test_string)
 
     add_executable          (test_console ./test/TestConsole.cpp)
     target_link_libraries   (test_console infra)
