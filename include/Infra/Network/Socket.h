@@ -8,17 +8,13 @@ namespace Infra
     class Socket
     {
     public:
-        enum class Protocol
-        {
-            TCP, UDP
-        };
+        virtual ~Socket() = default;
 
-    public:
         // Return is socket in blocking mode.
         bool IsBlocking() const;
 
         // Set socket blocking mode.
-        bool SetBlocking(bool block);
+        bool SetBlocking(bool block, bool force = false);
 
         // Close socket.
         void Close();
@@ -32,23 +28,10 @@ namespace Infra
         SocketState SelectRead(int timeoutInMs = -1);
         SocketState SelectWrite(int timeoutInMs = -1);
 
-        // Connect an endpoint.
-        SocketState Connect(const EndPoint& endpoint, int timeOutInMs = -1);
+    protected:
+        Socket(IpAddress::Family af, void* handle);
 
-        // Disconnect
-        virtual void Disconnect();
-
-        // Get remote ip
-        std::optional<IpAddress> GetRemoteIpAddress() const;
-
-    public:
-        static std::optional<Socket> Create(IpAddress::Family af = IpAddress::Family::IpV4, Protocol protocol = Protocol::TCP);
-
-    private:
-        Socket(IpAddress::Family af, Protocol protocol, void* handle);
-
-    private:
-        Protocol _protocol;
+    protected:
         IpAddress::Family _addressFamily;
         void* _handle;
         bool _isBlocking;
