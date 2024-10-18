@@ -1,11 +1,10 @@
 
-#include <memory>
-#include "Infra/ScopeGuard.h"
-#include "Infra/Image.h"
+#include "Infra/Utility/ScopeGuard.h"
+#include "Infra/Graphics/Image.h"
 
 #include <algorithm>
 
-#include "ThirdParty/stb_image.h"
+#include "../ThirdParty/stb_image.h"
 
 namespace Infra
 {

@@ -1,7 +1,7 @@
 
 #include "Infra/Network/DNS.h"
-#include "Posix/PosixNetworkHeader.h"
-#include "Windows/WindowsNetworkHeader.h"
+#include "Posix/PosixSocket.h"
+#include "Windows/WindowsSocket.h"
 
 namespace Infra
 {

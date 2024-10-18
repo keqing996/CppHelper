@@ -1,5 +1,7 @@
 #include "Infra/Network/Socket.h"
 
+#include <Infra/Utility/ScopeGuard.h>
+
 #include "Windows/WindowsSocket.h"
 #include "Posix/PosixSocket.h"
 
@@ -65,45 +67,85 @@ namespace Infra
 
     bool Socket::SetBlocking(bool block)
     {
+        if (block == IsBlocking())
+            return true;
+
         return Device::SetSocketBlocking(_handle, block);
+    }
+
+    SocketState Socket::SelectRead(const Socket* pSocket, int timeoutInMs)
+    {
+        if (timeoutInMs <= 0)
+            return SocketState::Error;
+
+        if (pSocket == nullptr)
+            return SocketState::Error;
+
+        void* handle = pSocket->GetNativeHandle();
+
+        fd_set selector;
+        FD_ZERO(&selector);
+        FD_SET(Device::ToNativeHandle(handle), &selector);
+
+        timeval time{};
+        time.tv_sec  = static_cast<long>(timeoutInMs / 1000);
+        time.tv_usec = timeoutInMs % 1000 * 1000;
+
+        if (select(static_cast<int>(Device::ToNativeHandle(handle) + 1), &selector, nullptr, nullptr, &time) > 0)
+            return SocketState::Success;
+
+        return Device::GetErrorState();
+    }
+
+    SocketState Socket::SelectWrite(const Socket* pSocket, int timeoutInMs)
+    {
+        if (timeoutInMs <= 0)
+            return SocketState::Error;
+
+        if (pSocket == nullptr)
+            return SocketState::Error;
+
+        void* handle = pSocket->GetNativeHandle();
+
+        fd_set selector;
+        FD_ZERO(&selector);
+        FD_SET(Device::ToNativeHandle(handle), &selector);
+
+        timeval time{};
+        time.tv_sec  = static_cast<long>(timeoutInMs / 1000);
+        time.tv_usec = timeoutInMs % 1000 * 1000;
+
+        if (select(static_cast<int>(Device::ToNativeHandle(handle) + 1), nullptr, &selector, nullptr, &time) > 0)
+            return SocketState::Success;
+
+        return Device::GetErrorState();
     }
 
     SocketState Socket::SelectRead(int timeoutInMs)
     {
-        if (timeoutInMs <= 0)
-            return SocketState::Error;
-
-        fd_set selector;
-        FD_ZERO(&selector);
-        FD_SET(Device::ToNativeHandle(_handle), &selector);
-
-        timeval time{};
-        time.tv_sec  = static_cast<long>(timeoutInMs / 1000);
-        time.tv_usec = timeoutInMs % 1000 * 1000;
-
-        if (select(static_cast<int>(Device::ToNativeHandle(_handle) + 1), &selector, nullptr, nullptr, &time) > 0)
-            return SocketState::Success;
-
-        return Device::GetErrorState();
+        return SelectRead(this, timeoutInMs);
     }
 
     SocketState Socket::SelectWrite(int timeoutInMs)
     {
-        if (timeoutInMs <= 0)
-            return SocketState::Error;
+        return SelectWrite(this, timeoutInMs);
+    }
 
-        fd_set selector;
-        FD_ZERO(&selector);
-        FD_SET(Device::ToNativeHandle(_handle), &selector);
+    static SocketState ConnectNoSelect(void* handle, sockaddr* pSockAddr, int structLen)
+    {
+        if (::connect(Device::ToNativeHandle(handle), pSockAddr, structLen) == -1)
+            return Device::GetErrorState();
 
-        timeval time{};
-        time.tv_sec  = static_cast<long>(timeoutInMs / 1000);
-        time.tv_usec = timeoutInMs % 1000 * 1000;
+        return SocketState::Success;
+    }
 
-        if (select(static_cast<int>(Device::ToNativeHandle(_handle) + 1), nullptr, &selector, nullptr, &time) > 0)
+    static SocketState ConnectWithSelect(const Socket* pSocket, sockaddr* pSockAddr, int structLen, int timeOutInMs)
+    {
+        // Connect once, if connection is success, no need to select.
+        if (::connect(Device::ToNativeHandle(pSocket->GetNativeHandle()), pSockAddr, structLen) >= 0)
             return SocketState::Success;
 
-        return Device::GetErrorState();
+        return Socket::SelectWrite(pSocket, timeOutInMs);
     }
 
     SocketState Socket::Connect(const EndPoint& endpoint, int timeOutInMs)
@@ -144,43 +186,19 @@ namespace Infra
                 return SocketState::AddrFamilyNotMatch;
         }
 
+        // [NonTimeout + Blocking/NonBlocking] -> just connect
         if (timeOutInMs <= 0)
-        {
-            // No timeout case, just connect
-            if (::connect(Device::ToNativeHandle(_handle), pSockAddr, structLen) == -1)
-                return Device::GetErrorState();
+            return ConnectNoSelect(_handle, pSockAddr, structLen);
 
-            return SocketState::Success;
-        }
-        else
-        {
-            // Has timeout case.
-            // 1. Socket is blocking, change socket to non-blocking, then connect and select.
-            // 2. Socket is non-blocking,
-            const bool originalBlockState = IsBlocking();
+        // [Timeout + NonBlocking] -> just connect
+        if (!IsBlocking())
+            return ConnectNoSelect(_handle, pSockAddr, structLen);
 
-            if (originalBlockState)
-                SetBlocking(false);
+        // [Timeout + Blocking] -> set nonblocking and select
+        SetBlocking(false);
+        ScopeGuard guard([this]()->void { SetBlocking(true); });
 
-            // Connect once, if connection is success, no need to select.
-            if (::connect(Device::ToNativeHandle(_handle), pSockAddr, structLen) >= 0)
-            {
-                SetBlocking(originalBlockState);
-                return SocketState::Success;
-            }
-
-            SocketState currentState = Device::GetErrorState();
-
-            // Socket is not blocking, return immediately
-            if (!originalBlockState)
-                return currentState;
-            else
-            {
-                auto state = SelectWrite(timeOutInMs);
-                if (state == SocketState::Success && )
-            }
-        }
-
+        return ConnectWithSelect(this, pSockAddr, structLen, timeOutInMs);
     }
 
     void Socket::Disconnect()

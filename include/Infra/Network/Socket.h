@@ -27,6 +27,8 @@ namespace Infra
         void* GetNativeHandle() const;
 
         // Select
+        static SocketState SelectRead(const Socket* pSocket, int timeoutInMs = -1);
+        static SocketState SelectWrite(const Socket* pSocket, int timeoutInMs = -1);
         SocketState SelectRead(int timeoutInMs = -1);
         SocketState SelectWrite(int timeoutInMs = -1);
 
