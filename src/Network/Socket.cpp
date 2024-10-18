@@ -213,7 +213,24 @@ namespace Infra
 
         if (_addressFamily == IpAddress::Family::IpV4)
         {
+            sockaddr_in address{};
+            int structLen = sizeof(sockaddr_in);
+            if (::getpeername(Device::ToNativeHandle(_handle), reinterpret_cast<sockaddr*>(&address), &structLen) != -1)
+                return IpAddress(ntohl(address.sin_addr.s_addr));
 
+            return std::nullopt;
         }
+
+        if (_addressFamily == IpAddress::Family::IpV6)
+        {
+            sockaddr_in6 address{};
+            int structLen = sizeof(sockaddr_in6);
+            if (::getpeername(Device::ToNativeHandle(_handle), reinterpret_cast<sockaddr*>(&address), &structLen) != -1)
+                return IpAddress(address.sin6_addr.s6_addr);
+
+            return std::nullopt;
+        }
+
+        return std::nullopt;
     }
 }
