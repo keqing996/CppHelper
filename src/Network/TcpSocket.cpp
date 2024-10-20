@@ -42,7 +42,7 @@ namespace Infra
     {
         // Check address families match.
         if (endpoint.GetAddressFamily() != _addressFamily)
-            return SocketState::AddrFamilyNotMatch;
+            return SocketState::Error;
 
         // Disconnect last.
         Disconnect();
@@ -73,7 +73,7 @@ namespace Infra
                 structLen = sizeof(sockaddr_in6);
                 break;
             default:
-                return SocketState::AddrFamilyNotMatch;
+                return SocketState::Error;
         }
 
         // [NonTimeout + Blocking/NonBlocking] -> just connect
@@ -138,5 +138,16 @@ namespace Infra
 
     std::pair<SocketState, size_t> TcpSocket::Receive(void* pBuffer, size_t size)
     {
+        if (pBuffer == nullptr || size == 0)
+            return { SocketState::Error, 0 };
+
+        int result = ::recv(Device::ToNativeHandle(_handle), static_cast<char*>(pBuffer), size, 0);
+        if (result == 0)
+            return { SocketState::Disconnect, 0 };
+
+        if (result < 0)
+            return { Device::GetErrorState(), 0 };
+
+        return { SocketState::Success, result };
     }
 }

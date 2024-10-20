@@ -6,7 +6,6 @@ namespace Infra
     {
         Success,
         Busy,
-        AddrFamilyNotMatch,
         Disconnect,
         Error
     };

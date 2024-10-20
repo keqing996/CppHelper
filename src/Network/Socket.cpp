@@ -48,7 +48,7 @@ namespace Infra
         time.tv_sec  = static_cast<long>(timeoutInMs / 1000);
         time.tv_usec = timeoutInMs % 1000 * 1000;
 
-        if (select(static_cast<int>(Device::ToNativeHandle(handle) + 1), &selector, nullptr, nullptr, &time) > 0)
+        if (::select(static_cast<int>(Device::ToNativeHandle(handle) + 1), &selector, nullptr, nullptr, &time) > 0)
             return SocketState::Success;
 
         return Device::GetErrorState();
@@ -72,7 +72,7 @@ namespace Infra
         time.tv_sec  = static_cast<long>(timeoutInMs / 1000);
         time.tv_usec = timeoutInMs % 1000 * 1000;
 
-        if (select(static_cast<int>(Device::ToNativeHandle(handle) + 1), nullptr, &selector, nullptr, &time) > 0)
+        if (::select(static_cast<int>(Device::ToNativeHandle(handle) + 1), nullptr, &selector, nullptr, &time) > 0)
             return SocketState::Success;
 
         return Device::GetErrorState();
