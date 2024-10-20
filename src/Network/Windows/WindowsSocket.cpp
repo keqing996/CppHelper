@@ -53,14 +53,10 @@ namespace Infra::Device
     {
         switch (::WSAGetLastError())
         {
-            // Resource temporarily unavailable.
-            // This error is returned from operations on nonblocking sockets that
-            // cannot be completed immediately, for example recv when no data is
-            // queued to be read from the socket. It is a nonfatal error, and the
-            // operation should be retried later. It is normal for WSAEWOULDBLOCK
-            // to be reported as the result from calling connect on a nonblocking
-            // SOCK_STREAM socket, since some time must elapse for the connection
-            // to be established.
+            // https://stackoverflow.com/questions/14546362/how-to-resolve-wsaewouldblock-error
+            // WSAEWOULDBLOCK is not really an error but simply tells you that your send buffers are full.
+            // This can happen if you saturate the network or if the other side simply doesn't acknowledge
+            // the received data.
             case WSAEWOULDBLOCK:
             // Operation already in progress.
             // An operation was attempted on a nonblocking socket with an operation
@@ -69,7 +65,7 @@ namespace Infra::Device
             // asynchronous request(WSAAsyncGetXbyY) that has already been canceled
             // or completed.
             case WSAEALREADY:
-                return SocketState::InProgress;
+                return SocketState::Busy;
             // Software caused connection abort.
             case WSAECONNABORTED:
             // Connection reset by peer.

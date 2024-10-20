@@ -5,7 +5,7 @@ namespace Infra
     enum class SocketState
     {
         Success,
-        InProgress,
+        Busy,
         AddrFamilyNotMatch,
         Disconnect,
         Error
