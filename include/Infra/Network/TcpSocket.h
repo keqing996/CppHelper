@@ -22,5 +22,8 @@ namespace Infra
         // Send
         std::pair<SocketState, size_t> Send(void* pData, size_t size);
         std::pair<SocketState, size_t> Receive(void* pBuffer, size_t size);
+
+    private:
+        TcpSocket(IpAddress::Family af, void* handle);
     };
 }

@@ -4,9 +4,10 @@
 
 #if PLATFORM_WINDOWS
 
+#include <string>
+#include <optional>
+#include <vector>
 #include <shobjidl.h>
-#include "../String.hpp"
-#include "../ScopeGuard.hpp"
 
 namespace Infra
 {

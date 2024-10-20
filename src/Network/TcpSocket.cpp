@@ -32,7 +32,7 @@ namespace Infra
         if (handle == Device::GetInvalidSocket())
             return std::nullopt;
 
-        Socket socket(af, Device::ToGeneralHandle(handle));
+        TcpSocket socket(af, Device::ToGeneralHandle(handle));
         socket.SetBlocking(true, true);
 
         return socket;
@@ -149,5 +149,10 @@ namespace Infra
             return { Device::GetErrorState(), 0 };
 
         return { SocketState::Success, result };
+    }
+
+    TcpSocket::TcpSocket(IpAddress::Family af, void* handle)
+        : Socket(af, handle)
+    {
     }
 }

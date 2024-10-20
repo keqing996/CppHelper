@@ -2,9 +2,9 @@
 
 #if PLATFORM_WINDOWS
 
-#include "Infra/System.h"
-#include "Infra/Windows/WindowsDefine.h"
-#include "Infra/String.h"
+#include "Infra/System/System.h"
+#include "Infra/Platform/Windows/WindowsDefine.h"
+#include "Infra/Utility/String.h"
 #include <Psapi.h>
 #undef GetEnvironmentVariable
 #undef SetEnvironmentVariable

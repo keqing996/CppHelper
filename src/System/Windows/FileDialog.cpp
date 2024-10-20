@@ -1,6 +1,9 @@
-#include "Infra/Windows/FileDialog.h"
+#include "Infra/Platform/Windows/FileDialog.h"
 
 #if PLATFORM_WINDOWS
+
+#include "Infra/Utility/String.h"
+#include "Infra/Utility/ScopeGuard.h"
 
 namespace Infra
 {

@@ -1,9 +1,9 @@
-#include "Infra/Windows/Console.h"
+#include "Infra/Platform/Windows/Console.h"
 
 #if PLATFORM_WINDOWS
 
 #include <iostream>
-#include "Infra/Windows/WindowsDefine.hpp"
+#include "Infra/Platform/Windows/WindowsDefine.h"
 
 namespace Infra
 {

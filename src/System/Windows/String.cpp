@@ -2,8 +2,8 @@
 
 #if PLATFORM_WINDOWS
 
-#include "Infra/String.h"
-#include "Infra/Windows/WindowsDefine.h"
+#include "Infra/Utility/String.h"
+#include "Infra/Platform/Windows/WindowsDefine.h"
 
 namespace Infra
 {
