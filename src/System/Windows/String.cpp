@@ -13,12 +13,12 @@ namespace Infra
         if (wideStr == nullptr)
             return std::string{};
 
-        int requiredSize = ::WideCharToMultiByte(CP_ACP, 0, wideStr,
+        int requiredSize = ::WideCharToMultiByte(CP_UTF8, 0, wideStr,
                                                  wStr.size(), nullptr, 0,
                                                  nullptr, nullptr);
 
         std::vector<char> charBuffer(requiredSize + 1, 0);
-        int size = ::WideCharToMultiByte(CP_ACP, 0, wideStr,
+        int size = ::WideCharToMultiByte(CP_UTF8, 0, wideStr,
                                          wStr.size(), charBuffer.data(), requiredSize,
                                          nullptr, nullptr);
         if (size < 0)
@@ -33,11 +33,11 @@ namespace Infra
         if (multiBytesStr == nullptr)
             return std::wstring{};
 
-        int requiredSize = ::MultiByteToWideChar(CP_ACP, 0, multiBytesStr,
+        int requiredSize = ::MultiByteToWideChar(CP_UTF8, 0, multiBytesStr,
                                                  str.size(), nullptr, 0);
 
         std::vector<wchar_t> wideCharBuffer(requiredSize + 1, 0);
-        int size = ::MultiByteToWideChar(CP_ACP, 0, multiBytesStr,
+        int size = ::MultiByteToWideChar(CP_UTF8, 0, multiBytesStr,
                                          str.size(), wideCharBuffer.data(), requiredSize);
         if (size < 0)
             return std::wstring{};
